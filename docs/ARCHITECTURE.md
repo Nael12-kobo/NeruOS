@@ -1,25 +1,26 @@
-# NeruOS Architecture — Initial Proposal
+# NeruOS Architecture — Standalone Shell Direction
 
-This is a living architecture document. It describes the intended direction, not a completed implementation.
+This is a living architecture document. It describes the intended direction and current prototype boundaries.
 
 ## High-level layers
 
 ~~~text
-+---------------------------------------------------------+
-| First-party applications                               |
-| NeruFiles | NeruStore | NeruSettings | NeruSearch       |
-+---------------------------------------------------------+
-| NeruOS desktop experience                               |
-| NeruBar | NeruDock | NeruCenter | NeruSpace             |
-+---------------------------------------------------------+
-| KDE Plasma 6 / KWin foundation                           |
-| Plasma shell integration | Wayland session | portals    |
-+---------------------------------------------------------+
-| Arch Linux userland                                      |
-| systemd | pacman | PipeWire | NetworkManager | portals   |
-+---------------------------------------------------------+
-| Linux kernel + hardware drivers                          |
-+---------------------------------------------------------+
++----------------------------------------------------------+
+| NeruOS first-party applications                          |
+| NeruFiles | NeruStore | NeruSettings | NeruSearch        |
++----------------------------------------------------------+
+| NeruOS standalone shell UI                               |
+| NeruBar | NeruDock | NeruCenter | NeruSpace              |
++----------------------------------------------------------+
+| Linux desktop session infrastructure                     |
+| Display server / compositor / window management          |
+| (host-provided during current prototype stage)            |
++----------------------------------------------------------+
+| Arch Linux userland                                       |
+| systemd | pacman | PipeWire | NetworkManager | portals    |
++----------------------------------------------------------+
+| Linux kernel + hardware drivers                           |
++----------------------------------------------------------+
 ~~~
 
 ## Base system
@@ -27,28 +28,47 @@ This is a living architecture document. It describes the intended direction, not
 - **Arch Linux** is the intended base for package availability and a rolling-release development model.
 - **systemd** is the service manager inherited from the base.
 - **pacman** is the initial package manager.
-- **archiso** is the planned tool for building installation media after the desktop stack is stable.
+- **archiso** is the planned tool for building installation media after the shell and recovery strategy are stable.
 
-No custom kernel is required for the first milestone. Kernel configuration and patches must be justified by a measurable need.
+No custom kernel is required for the initial milestones. Kernel configuration and patches must be justified by a measurable need.
 
-## Desktop foundation
+## Standalone shell strategy
 
-The first integration target is **KDE Plasma 6 with KWin**. Plasma provides a stable foundation for panels, workspace management, window handling, Wayland, and accessibility while NeruOS builds a distinctive visual layer.
+**Decision:** NeruOS will develop its own shell UI instead of targeting a KDE Plasma theme as its primary desktop experience.
 
-The initial Qt/QML prototype is deliberately a standalone application. It must not replace the user's running shell or modify their session configuration.
+The shell is being designed as a set of independent Qt/QML components:
+
+- **NeruBar** — dynamic menus based on the active application, clock, status, and quick actions.
+- **NeruDock** — floating launcher with pointer-driven magnification and active-app indicators.
+- **NeruCenter** — quick settings and notifications.
+- **NeruSearch** — application and settings search.
+- **NeruSpace** — workspace identity and selection.
+
+## Important prototype boundary
+
+The current shell prototype is a normal maximized Qt Quick application. It runs **on top of** an existing Linux desktop session and therefore still relies on the host's display server, compositor, and window manager.
+
+It does not yet:
+- Replace KWin, Mutter, or another window manager / compositor.
+- Provide a login manager or an independent desktop session.
+- Manage native application windows, focus, workspaces, or multi-monitor layouts.
+- Own system notifications or hardware controls.
+- Provide an installer or bootable ISO.
+
+A later milestone must select a window-management / compositor foundation or another explicit strategy. A shell UI and a compositor are separate responsibilities; writing the UI does not automatically supply window management.
 
 ## UI technology
 
-- Qt 6 / QML for interactive shell prototypes and future desktop components.
+- Qt 6 / QML for shell components and first-party interface prototypes.
 - SVG for scalable marks and simple UI artwork.
-- C++ only where a native service or integration genuinely requires it.
-- Prefer existing desktop standards and portals over custom privileged daemons.
+- C++ only where native services or integration genuinely require it.
+- Prefer desktop portals and documented session APIs over custom privileged daemons.
 
 ## System integration boundaries
 
-Prototype controls are visual demonstrations. They do not currently change real Wi-Fi, Bluetooth, audio, brightness, power, or display settings. Production integrations must use documented APIs and suitable permission boundaries.
+Current NeruCenter toggles and sliders are local demo state. They do not change real Wi-Fi, Bluetooth, audio, brightness, power, or display settings.
 
-A future NeruCenter may use existing user-session services such as NetworkManager, PipeWire, and power management interfaces. It should not run as root merely to display a settings panel.
+A future implementation may connect to user-session services such as NetworkManager, PipeWire, and power management APIs. It should not run as root merely to display a settings panel.
 
 ## Application compatibility
 

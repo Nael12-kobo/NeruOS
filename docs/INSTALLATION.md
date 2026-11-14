@@ -1,10 +1,10 @@
 # Development Installation
 
-NeruOS does not have an installable ISO yet. This guide explains how to build the current standalone UI prototype on an existing Arch Linux or CachyOS system.
+NeruOS does not have an installable ISO yet. This guide explains how to build the current standalone shell prototype on an existing Arch Linux or CachyOS system.
 
 ## Safety
 
-The current prototype is an ordinary application. It does not replace KDE Plasma, install a display manager, modify boot entries, repartition disks, or change system settings.
+The current prototype is an ordinary maximized application. It does not replace KDE Plasma, install a display manager, modify boot entries, repartition disks, or change system settings.
 
 Do not run prototype code with sudo.
 
@@ -36,12 +36,31 @@ cmake --build build
 ./build/neruos-nebula
 ~~~
 
-To build and run in one step:
+Or build and run with:
 
 ~~~bash
 chmod +x build.sh
 ./build.sh
 ~~~
+
+## Prototype controls
+
+- Hover over NeruDock icons to magnify them.
+- Click a dock icon to open its demo window.
+- NeruBar's menu labels change according to the selected demo application.
+- Use the NeruBar search icon or Alt+Space to open NeruSearch.
+- Use the status controls to open NeruCenter.
+- Move the pointer to the far-left screen edge to reveal the hidden navigation rail.
+- Select General, Coding, Gaming, or Study in the workspace strip.
+- Use Ctrl+Alt+1 through Ctrl+Alt+4 to change workspace labels.
+- Open NeruSettings and choose a wallpaper.
+- Press Escape to close transient UI.
+
+The dock, menus, workspace selector, and app windows are prototype-level interactions. They do not yet manage native windows or actually change system hardware settings.
+
+## Session architecture note
+
+The application runs above the current desktop session and still uses its window manager / compositor. “Standalone shell” describes the direction and component architecture; this prototype is not yet an independent login session or desktop environment.
 
 ## Troubleshooting
 

@@ -4,40 +4,62 @@ The roadmap is directional. Items are not promises of a date, and a milestone is
 
 ## Milestone 0 — Public project foundation
 
-**Status: In progress**
+**Status: Complete**
 
 - [x] Establish the NeruOS name and Nebula visual direction.
 - [x] Lock the initial dark / floating dock / custom wallpaper / hidden rail decisions.
 - [x] Publish the design system and branding guide.
 - [x] Create the logo and initial visual assets in SVG.
-- [x] Add a standalone Qt/QML desktop prototype.
-- [ ] Verify a clean build on a supported Arch Linux or CachyOS development machine.
-- [ ] Capture real runtime screenshots and replace concept-only imagery where appropriate.
+- [x] Create a public source repository and contribution guidelines.
 
-## Milestone 1 — Plasma integration
+## Milestone 1 — Standalone shell prototype
+
+**Status: In progress**
+
+- [x] Build the standalone Qt/QML shell application.
+- [x] Split NeruBar and NeruDock into reusable QML components.
+- [x] Add dynamic app-context menus to NeruBar.
+- [x] Add pointer-driven magnification, tooltips, and active-app indicator to NeruDock.
+- [x] Add keyboard shortcuts for search and workspace selection.
+- [x] Keep the prototype isolated from the active desktop session and boot configuration.
+- [ ] Verify on multiple resolutions and Wayland / X11 sessions.
+- [ ] Add keyboard navigation and reduced-motion support to all shell components.
+- [ ] Capture real runtime screenshots.
+
+## Milestone 2 — Native application integration
 
 **Status: Planned**
 
-- [ ] Create a Plasma Global Theme package.
-- [ ] Create Nebula Plasma Style and color scheme.
-- [ ] Create a matching icon theme.
-- [ ] Build a panel layout that matches the Nebula design.
-- [ ] Prototype NeruBar and NeruDock as maintainable Plasma components.
-- [ ] Test Wayland and X11 behavior where relevant.
-- [ ] Add keyboard navigation and reduced-motion settings.
+- [ ] Discover installed applications from desktop entry files.
+- [ ] Launch applications through standard desktop APIs.
+- [ ] Track running application state and active windows.
+- [ ] Integrate focus, minimize, and close behavior.
+- [ ] Replace demo app windows with real application windows.
+- [ ] Define multi-monitor and fractional-scaling behavior.
 
-## Milestone 2 — First-party desktop utilities
+## Milestone 3 — Session and system services
+
+**Status: Planned**
+
+- [ ] Select a window-management / compositor strategy.
+- [ ] Define the standalone login session and session startup.
+- [ ] Integrate real NetworkManager, PipeWire, and power-management controls.
+- [ ] Integrate notifications and desktop portals.
+- [ ] Add shell crash recovery and safe fallback session.
+- [ ] Test Wayland and required compatibility paths.
+
+## Milestone 4 — First-party utilities
 
 **Status: Planned**
 
 - [ ] NeruSettings design and navigation.
 - [ ] NeruSearch launcher with local application discovery.
 - [ ] NeruCenter integration with actual system services.
-- [ ] NeruSpace workspace presets.
+- [ ] NeruSpace integration with the selected compositor.
 - [ ] NeruFiles requirements and design.
 - [ ] NeruStore requirements and package trust model.
 
-## Milestone 3 — System engineering
+## Milestone 5 — System engineering
 
 **Status: Planned**
 
@@ -49,7 +71,7 @@ The roadmap is directional. Items are not promises of a date, and a milestone is
 - [ ] Test fresh install, upgrade, rollback, and recovery.
 - [ ] Add automated CI for prototype builds and package metadata.
 
-## Milestone 4 — Gaming and compatibility
+## Milestone 6 — Gaming and compatibility
 
 **Status: Planned**
 
@@ -60,11 +82,11 @@ The roadmap is directional. Items are not promises of a date, and a milestone is
 - [ ] Clearly list anti-cheat limitations.
 - [ ] Keep native Windows as a fallback for incompatible titles.
 
-## Milestone 5 — Alpha release
+## Milestone 7 — Alpha release
 
 **Status: Not started**
 
-An alpha ISO will only be published after the installer, boot flow, system updates, recovery, and hardware support have been exercised on test machines. No ISO is currently available.
+An alpha ISO will only be published after the session, installer, boot flow, system updates, recovery, and hardware support have been exercised on test machines. No ISO is currently available.
 
 ## Proposing roadmap changes
 

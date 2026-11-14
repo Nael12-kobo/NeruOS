@@ -1,6 +1,8 @@
-# Qt Desktop Prototype
+# Standalone Qt Desktop Shell Prototype
 
-This is a standalone Qt Quick/QML application used to explore the NeruOS Nebula desktop. It is **not** a Plasma shell replacement or a complete operating system.
+This is the NeruOS Nebula shell UI prototype built with Qt Quick/QML. It is developed as an independent set of NeruOS components rather than a KDE Plasma theme.
+
+**Important:** the prototype is still a normal maximized application. It runs on an existing Linux desktop session and uses that session's window manager and compositor. It is not yet an independent login session or a complete desktop environment.
 
 ## Build on Arch Linux / CachyOS
 
@@ -18,16 +20,43 @@ cmake --build build
 ./build/neruos-nebula
 ~~~
 
-Or run ./build.sh from this directory.
+Or run `./build.sh` from this directory.
 
-## Prototype interactions
+## v0.2 interactions
 
-- Use the floating dock to open demo application windows.
-- Use the search button to open NeruSearch.
-- Use the status button to open NeruCenter.
-- Move the pointer to the far-left screen edge to reveal the navigation rail.
-- Switch between General, Coding, Gaming, and Study workspace labels.
-- Open NeruSettings and choose a custom wallpaper.
-- Press Escape to dismiss open overlays and demo windows.
+### NeruDock
 
-All controls are local UI demonstrations. They do not yet control NetworkManager, audio, brightness, power management, or real application launching.
+- Hover over an app icon to magnify it.
+- Nearby icons respond with a smaller scale based on pointer distance.
+- Icons animate smoothly and show a tooltip.
+- An indicator dot marks the currently open demo app.
+- Click an icon to open its demo window.
+
+### NeruBar
+
+- Menu labels change based on the selected demo app.
+- File, Code, Settings, Steam, and Store contexts have different menu groups.
+- Menu actions can open demo apps, change workspace labels, select a wallpaper, or show shell information.
+- Status buttons open NeruCenter.
+- Search opens from the top bar or with `Alt+Space`.
+
+### NeruSpace
+
+- Select General, Coding, Gaming, or Study.
+- Use `Ctrl+Alt+1` through `Ctrl+Alt+4` to switch workspace labels.
+
+### Other controls
+
+- Move the pointer to the far-left screen edge to reveal the hidden navigation rail.
+- Open NeruSettings to choose a wallpaper for the current session.
+- Press Escape to close transient UI.
+
+## Current limitations
+
+- Dock app windows are illustrative demo windows, not native application windows.
+- Dock active state tracks the selected demo app only.
+- NeruCenter values are local UI state and do not alter NetworkManager, Bluetooth, audio, brightness, or power settings.
+- Workspace selection changes the prototype's workspace label only; it is not yet connected to a compositor.
+- No independent login session, window manager, compositor, installer, or bootable ISO is provided.
+
+The next shell milestone is native application discovery / launching, followed by an explicit window-management and session architecture decision.

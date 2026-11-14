@@ -1,4 +1,4 @@
-# NeruOS Nebula Design System v0.1
+# NeruOS Nebula Design System v0.2
 
 This document records the visual rules approved for the first NeruOS edition. It will evolve through implementation, testing, accessibility reviews, and contributor feedback.
 
@@ -17,10 +17,12 @@ Nebula should feel **atmospheric, premium, calm, and responsive**. It takes insp
 |---|---|
 | Default appearance | Dark |
 | Dock | Floating, horizontally centered near the bottom |
+| Dock hover | Pointer-distance magnification with eased scaling |
+| NeruBar | Dynamic application-context menus and system status actions |
 | Wallpaper | User-selectable; Nebula is the default concept |
 | Navigation rail | Hidden by default; reveal from the left edge |
 | Quick settings | NeruCenter, opened from the top bar |
-| App search | NeruSearch, opened from the top bar or dock |
+| App search | NeruSearch, opened from the top bar or Alt+Space |
 | Workspace presets | General, Coding, Gaming, Study |
 
 ## 3. Color tokens
@@ -72,6 +74,7 @@ Suggested spacing rhythm: 4, 8, 12, 16, 24, 32, and 48 px.
 | Interaction | Target duration |
 |---|---:|
 | Hover / pressed feedback | 100–130 ms |
+| NeruDock magnification | 135 ms |
 | Popover open / close | 150–190 ms |
 | Window open / close | 180–220 ms |
 | Workspace transition | 220–280 ms |
@@ -80,8 +83,8 @@ Motion must be interruptible, must not block input, and must respect reduced-mot
 
 ## 7. Core components
 
-- **NeruBar** — global status, clock, application menu, and system indicators.
-- **NeruDock** — floating application launcher and task indicators.
+- **NeruBar** — dynamic app-context menus, global status, clock, and quick actions.
+- **NeruDock** — floating app launcher, pointer-distance magnification, tooltips, and selected-app indicator.
 - **NeruCenter** — quick settings and notifications.
 - **NeruSearch** — universal search and app launcher.
 - **NeruSpace** — workspace identity and switching.

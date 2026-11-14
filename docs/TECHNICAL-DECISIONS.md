@@ -12,21 +12,21 @@ This file records decisions that affect the direction of the project. New decisi
 
 **Consequences:** The team must document update practices, package maintenance, and recovery. A rolling distribution needs thorough update testing before a broad release.
 
-## ADR-002 — Start with KDE Plasma 6
-
-**Status:** Accepted for initial integration
-
-**Decision:** Use KDE Plasma 6 / KWin as the first desktop foundation.
-
-**Context:** A complete custom desktop environment would expand scope dramatically. Plasma provides existing window management, workspace, panel, and Wayland capabilities.
-
-**Consequences:** NeruOS must respect Plasma packaging conventions and avoid patching core components without need. Custom shell work can be evaluated after the first theme and panel integration.
-
-## ADR-003 — Use Qt 6 and QML for UI prototypes
+## ADR-002 — Develop a standalone NeruOS shell
 
 **Status:** Accepted
 
-**Decision:** Use Qt 6 / QML for the desktop prototype and future first-party interface components.
+**Decision:** Build NeruOS's own shell UI components with Qt 6 / QML. Do not make a KDE Plasma theme the primary desktop product.
+
+**Context:** The desired product needs its own interaction language and visual identity.
+
+**Consequences:** NeruOS must eventually select or develop a window-management / compositor foundation, session startup, login integration, and recovery path. The UI shell alone does not manage native windows.
+
+## ADR-003 — Use Qt 6 and QML
+
+**Status:** Accepted
+
+**Decision:** Use Qt 6 / QML for the shell prototype and future first-party interface components.
 
 **Context:** Qt Quick supports fluid, declarative interfaces and animation.
 
@@ -47,3 +47,13 @@ This file records decisions that affect the direction of the project. New decisi
 **Decision:** The prototype runs as a regular user application and does not modify the active desktop shell or boot configuration.
 
 **Consequences:** It can be tested without installing a custom session. Real system controls require separate design, permission review, and integration work.
+
+## ADR-006 — Separate NeruBar and NeruDock components
+
+**Status:** Accepted
+
+**Decision:** Keep the top bar and dock in separate reusable QML components.
+
+**Context:** Both components have their own interaction state and will grow independently.
+
+**Consequences:** Their APIs should remain explicit and signal-based. Parent shell state owns active application, workspace, and system-service data.

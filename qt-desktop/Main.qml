@@ -12,7 +12,7 @@ ApplicationWindow {
     minimumHeight: 640
     visible: true
     visibility: Window.Maximized
-    title: "NeruOS Nebula — Desktop Prototype"
+    title: "NeruOS Nebula — Standalone Shell Prototype"
     color: "#080F1A"
 
     property string activeWorkspace: "General"
@@ -20,6 +20,8 @@ ApplicationWindow {
     property bool centerOpen: false
     property bool searchOpen: false
     property bool railVisible: false
+    property bool aboutOpen: false
+    property string aboutHeading: "About NeruOS"
     property url customWallpaper: ""
     property date currentTime: new Date()
     property int brightness: 78
@@ -48,20 +50,66 @@ ApplicationWindow {
 
     function openApp(name) {
         if (name === "NeruSearch") {
-            searchOpen = true
+            searchOpen = !searchOpen
             centerOpen = false
+            aboutOpen = false
             return
         }
         activeApp = name
         searchOpen = false
         centerOpen = false
+        aboutOpen = false
         railVisible = false
     }
 
     function closeTransientUi() {
         centerOpen = false
         searchOpen = false
+        aboutOpen = false
         activeApp = ""
+    }
+
+    function handleMenuAction(action) {
+        if (["General", "Coding", "Gaming", "Study"].indexOf(action) >= 0) {
+            activeWorkspace = action
+            activeApp = ""
+            return
+        }
+
+        if (action === "Choose Wallpaper") {
+            wallpaperDialog.open()
+            return
+        }
+        if (action === "Reset Wallpaper") {
+            customWallpaper = ""
+            return
+        }
+        if (action === "Toggle Navigation Rail") {
+            railVisible = !railVisible
+            return
+        }
+        if (action === "Close Window" || action === "Show Desktop") {
+            activeApp = ""
+            return
+        }
+        if (action === "About NeruOS") {
+            aboutHeading = "About NeruOS"
+            aboutOpen = true
+            activeApp = ""
+            return
+        }
+        if (action === "Keyboard Shortcuts") {
+            aboutHeading = "Keyboard Shortcuts"
+            aboutOpen = true
+            activeApp = ""
+            return
+        }
+        if (action === "New Window") {
+            activeApp = "NeruFiles"
+            return
+        }
+        if (action.length > 0)
+            openApp(action)
     }
 
     Timer {
@@ -102,103 +150,37 @@ ApplicationWindow {
         color: "#10050A18"
     }
 
-    // NeruBar: top status and application area.
-    Rectangle {
+    // Standalone NeruBar: menu labels follow the active application context.
+    NeruBar {
         id: topBar
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.margins: 16
-        height: 52
-        radius: 17
-        color: "#D90A1222"
-        border.color: "#557B96C0"
-        border.width: 1
-        z: 10
-
-        RowLayout {
-            anchors.fill: parent
-            anchors.leftMargin: 16
-            anchors.rightMargin: 14
-            spacing: 13
-
-            Image {
-                source: "qrc:/assets/logo-mark.svg"
-                sourceSize.width: 28
-                sourceSize.height: 28
-                Layout.preferredWidth: 28
-                Layout.preferredHeight: 28
-                fillMode: Image.PreserveAspectFit
-            }
-            Text {
-                text: "NeruOS"
-                color: root.primaryText
-                font.pixelSize: 15
-                font.weight: Font.DemiBold
-            }
-            Rectangle { width: 1; height: 24; color: "#52627E" }
-            Repeater {
-                model: ["File", "Edit", "View", "Apps", "Window", "Help"]
-                delegate: Text {
-                    required property string modelData
-                    text: modelData
-                    color: root.secondaryText
-                    font.pixelSize: 12
-                    verticalAlignment: Text.AlignVCenter
-                }
-            }
-            Item { Layout.fillWidth: true }
-            Text {
-                text: root.activeWorkspace + " Space"
-                color: "#DBE5FA"
-                font.pixelSize: 11
-                font.weight: Font.DemiBold
-            }
-            Text { text: "◈"; color: root.secondaryText; font.pixelSize: 17 }
-            Text { text: "◖"; color: root.secondaryText; font.pixelSize: 17 }
-            Text { text: "▰"; color: root.secondaryText; font.pixelSize: 14 }
-            ToolButton {
-                text: "⌕"
-                font.pixelSize: 20
-                onClicked: { root.searchOpen = !root.searchOpen; root.centerOpen = false }
-                background: Rectangle { radius: 9; color: parent.hovered ? "#40506E91" : "transparent" }
-                contentItem: Text {
-                    text: parent.text
-                    color: root.primaryText
-                    font: parent.font
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                }
-            }
-            ToolButton {
-                text: "◌"
-                font.pixelSize: 19
-                onClicked: { root.centerOpen = !root.centerOpen; root.searchOpen = false }
-                background: Rectangle { radius: 9; color: parent.hovered ? "#40506E91" : "transparent" }
-                contentItem: Text {
-                    text: parent.text
-                    color: root.primaryText
-                    font: parent.font
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                }
-            }
-            Text {
-                text: Qt.formatDateTime(root.currentTime, "ddd, dd MMM  hh:mm")
-                color: root.primaryText
-                font.pixelSize: 11
-                font.weight: Font.DemiBold
-            }
+        z: 20
+        appName: root.activeApp
+        workspaceName: root.activeWorkspace
+        clockText: Qt.formatDateTime(root.currentTime, "ddd, dd MMM  hh:mm")
+        onSearchRequested: root.openApp("NeruSearch")
+        onCenterRequested: {
+            root.centerOpen = !root.centerOpen
+            root.searchOpen = false
+            root.aboutOpen = false
+        }
+        onMenuActionRequested: function(action) {
+            root.handleMenuAction(action)
         }
     }
 
+    // Calm desktop identity.
     Column {
         anchors.left: parent.left
         anchors.leftMargin: 62
         anchors.top: topBar.bottom
-        anchors.topMargin: 64
+        anchors.topMargin: 70
         spacing: 9
         z: 2
+
         Text {
             text: "Find your flow."
             color: "#F3F5FF"
@@ -220,7 +202,9 @@ ApplicationWindow {
                 anchors.centerIn: parent
                 spacing: 7
                 Rectangle {
-                    width: 6; height: 6; radius: 3
+                    width: 6
+                    height: 6
+                    radius: 3
                     color: root.cyan
                     anchors.verticalCenter: parent.verticalCenter
                 }
@@ -235,11 +219,11 @@ ApplicationWindow {
         }
     }
 
-    // Hidden navigation rail: reveal from the far-left edge.
+    // Hidden navigation rail: a narrow hot-zone reveals it on demand.
     MouseArea {
         x: 0
         y: 82
-        width: 7
+        width: 8
         height: parent.height - 164
         hoverEnabled: true
         z: 30
@@ -259,35 +243,41 @@ ApplicationWindow {
         opacity: visible ? 1 : 0
         z: 31
         Behavior on opacity { NumberAnimation { duration: 150 } }
+
         MouseArea {
             anchors.fill: parent
             hoverEnabled: true
             onExited: root.railVisible = false
         }
+
         Column {
             anchors.fill: parent
             anchors.topMargin: 14
             anchors.bottomMargin: 14
             spacing: 7
+
             Repeater {
                 model: [
                     { label: "Home", glyph: "⌂", app: "" },
                     { label: "Files", glyph: "▰", app: "NeruFiles" },
                     { label: "Store", glyph: "◇", app: "NeruStore" },
                     { label: "Code", glyph: "</>", app: "NeruCode" },
-                    { label: "Games", glyph: "✣", app: "Steam" }
+                    { label: "Games", glyph: "✣", app: "Steam" },
+                    { label: "Settings", glyph: "⚙", app: "NeruSettings" }
                 ]
+
                 delegate: Item {
                     required property var modelData
                     width: navigationRail.width
-                    height: 74
+                    height: 66
+
                     Column {
                         anchors.centerIn: parent
                         spacing: 3
                         Text {
                             text: modelData.glyph
                             color: "#D5DDF6"
-                            font.pixelSize: 25
+                            font.pixelSize: 23
                             anchors.horizontalCenter: parent.horizontalCenter
                         }
                         Text {
@@ -297,16 +287,20 @@ ApplicationWindow {
                             anchors.horizontalCenter: parent.horizontalCenter
                         }
                     }
+
                     MouseArea {
                         anchors.fill: parent
-                        onClicked: modelData.app.length ? root.openApp(modelData.app) : root.closeTransientUi()
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: modelData.app.length
+                                    ? root.openApp(modelData.app)
+                                    : root.closeTransientUi()
                     }
                 }
             }
         }
     }
 
-    // Workspace selector.
+    // Workspace presets.
     Rectangle {
         id: workspaceStrip
         anchors.top: topBar.bottom
@@ -318,12 +312,15 @@ ApplicationWindow {
         color: "#A90B1428"
         border.color: "#4D7185AE"
         z: 12
+
         Row {
             anchors.fill: parent
             anchors.margins: 5
             spacing: 4
+
             Repeater {
                 model: ["General", "Coding", "Gaming", "Study"]
+
                 delegate: Rectangle {
                     required property string modelData
                     width: (workspaceStrip.width - 18) / 4
@@ -331,6 +328,7 @@ ApplicationWindow {
                     radius: 11
                     color: root.activeWorkspace === modelData ? "#7E594AB4" : "transparent"
                     border.color: root.activeWorkspace === modelData ? "#9277E8" : "transparent"
+
                     Text {
                         anchors.centerIn: parent
                         text: modelData
@@ -338,8 +336,10 @@ ApplicationWindow {
                         font.pixelSize: 10
                         font.weight: root.activeWorkspace === modelData ? Font.DemiBold : Font.Normal
                     }
+
                     MouseArea {
                         anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
                         onClicked: root.activeWorkspace = modelData
                     }
                 }
@@ -347,58 +347,21 @@ ApplicationWindow {
         }
     }
 
-    // Floating dock.
-    Rectangle {
+    // Standalone floating NeruDock with pointer-driven magnification.
+    NeruDock {
         id: dock
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 22
-        width: Math.min(700, root.width - 48)
-        height: 78
-        radius: 24
-        color: "#E00E1A30"
-        border.color: "#7792B5D0"
-        border.width: 1
         z: 50
-        Row {
-            anchors.centerIn: parent
-            spacing: 9
-            Repeater {
-                model: root.dockApps
-                delegate: Item {
-                    required property var modelData
-                    width: 58
-                    height: 58
-                    Rectangle {
-                        anchors.fill: parent
-                        radius: 17
-                        color: modelData.tint
-                        border.color: "#72D6E4FA"
-                        border.width: 1
-                        gradient: Gradient {
-                            GradientStop { position: 0; color: Qt.lighter(modelData.tint, 1.35) }
-                            GradientStop { position: 1; color: modelData.tint }
-                        }
-                        Text {
-                            anchors.centerIn: parent
-                            text: modelData.glyph
-                            color: "#F7FAFF"
-                            font.pixelSize: modelData.glyph === "</>" ? 15 : 24
-                            font.bold: true
-                        }
-                    }
-                    MouseArea {
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        onClicked: root.openApp(modelData.name)
-                        cursorShape: Qt.PointingHandCursor
-                    }
-                }
-            }
+        applications: root.dockApps
+        activeApplication: root.activeApp
+        onApplicationRequested: function(appName) {
+            root.openApp(appName)
         }
     }
 
-    // NeruCenter quick settings. Values are UI-only in this prototype.
+    // NeruCenter — visual control prototype; no hardware APIs are connected yet.
     Rectangle {
         id: centerPanel
         width: 360
@@ -412,36 +375,40 @@ ApplicationWindow {
         border.color: "#8495B9D5"
         visible: root.centerOpen
         z: 60
+
         ColumnLayout {
             anchors.fill: parent
             anchors.margins: 19
             spacing: 13
+
             RowLayout {
-                Text { text: "NeruCenter"; color: root.primaryText; font.pixelSize: 19; font.bold: true }
+                Text {
+                    text: "NeruCenter"
+                    color: root.primaryText
+                    font.pixelSize: 19
+                    font.bold: true
+                }
                 Item { Layout.fillWidth: true }
                 ToolButton {
                     text: "×"
                     onClicked: root.centerOpen = false
-                    contentItem: Text {
-                        text: parent.text; color: root.secondaryText
-                        font.pixelSize: 20
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                    }
                 }
             }
+
             GridLayout {
                 columns: 2
                 columnSpacing: 10
                 rowSpacing: 10
                 Layout.fillWidth: true
+
                 Repeater {
                     model: [
-                        { label: "Wi-Fi", detail: root.wifiEnabled ? "Connected" : "Off", key: "wifi" },
-                        { label: "Bluetooth", detail: root.bluetoothEnabled ? "Enabled" : "Off", key: "bluetooth" },
-                        { label: "Display", detail: "Night Light", key: "display" },
-                        { label: "Sound", detail: root.volume + "%", key: "sound" }
+                        { label: "Wi-Fi", detail: root.wifiEnabled ? "Demo: Connected" : "Demo: Off", key: "wifi" },
+                        { label: "Bluetooth", detail: root.bluetoothEnabled ? "Demo: Enabled" : "Demo: Off", key: "bluetooth" },
+                        { label: "Display", detail: "Night Light (demo)", key: "display" },
+                        { label: "Sound", detail: root.volume + "% (demo)", key: "sound" }
                     ]
+
                     delegate: Rectangle {
                         required property var modelData
                         Layout.fillWidth: true
@@ -449,50 +416,73 @@ ApplicationWindow {
                         radius: 13
                         color: "#B8233553"
                         border.color: "#456A84AA"
+
                         Column {
                             anchors.left: parent.left
                             anchors.verticalCenter: parent.verticalCenter
                             anchors.leftMargin: 13
                             spacing: 4
-                            Text { text: modelData.label; color: root.primaryText; font.pixelSize: 12; font.bold: true }
-                            Text { text: modelData.detail; color: root.secondaryText; font.pixelSize: 10 }
+                            Text {
+                                text: modelData.label
+                                color: root.primaryText
+                                font.pixelSize: 12
+                                font.bold: true
+                            }
+                            Text {
+                                text: modelData.detail
+                                color: root.secondaryText
+                                font.pixelSize: 10
+                            }
                         }
+
                         MouseArea {
                             anchors.fill: parent
                             onClicked: {
-                                if (modelData.key === "wifi") root.wifiEnabled = !root.wifiEnabled
-                                if (modelData.key === "bluetooth") root.bluetoothEnabled = !root.bluetoothEnabled
+                                if (modelData.key === "wifi")
+                                    root.wifiEnabled = !root.wifiEnabled
+                                if (modelData.key === "bluetooth")
+                                    root.bluetoothEnabled = !root.bluetoothEnabled
                             }
                         }
                     }
                 }
             }
-            Rectangle { Layout.fillWidth: true; height: 1; color: "#52627E" }
+
+            Rectangle {
+                Layout.fillWidth: true
+                height: 1
+                color: "#52627E"
+            }
+
             RowLayout {
-                Text { text: "Brightness"; color: root.secondaryText; font.pixelSize: 11 }
+                Text { text: "Brightness (demo)"; color: root.secondaryText; font.pixelSize: 11 }
                 Item { Layout.fillWidth: true }
                 Text { text: root.brightness + "%"; color: root.primaryText; font.pixelSize: 11 }
             }
             Slider {
                 Layout.fillWidth: true
-                from: 0; to: 100
+                from: 0
+                to: 100
                 value: root.brightness
                 onMoved: root.brightness = Math.round(value)
             }
+
             RowLayout {
-                Text { text: "Volume"; color: root.secondaryText; font.pixelSize: 11 }
+                Text { text: "Volume (demo)"; color: root.secondaryText; font.pixelSize: 11 }
                 Item { Layout.fillWidth: true }
                 Text { text: root.volume + "%"; color: root.primaryText; font.pixelSize: 11 }
             }
             Slider {
                 Layout.fillWidth: true
-                from: 0; to: 100
+                from: 0
+                to: 100
                 value: root.volume
                 onMoved: root.volume = Math.round(value)
             }
+
             Item { Layout.fillHeight: true }
             Text {
-                text: "Prototype controls only — no hardware changes"
+                text: "Prototype values only — hardware controls are not connected"
                 color: "#778AA9"
                 font.pixelSize: 9
                 wrapMode: Text.WordWrap
@@ -501,7 +491,7 @@ ApplicationWindow {
         }
     }
 
-    // Universal application search.
+    // NeruSearch — local UI demonstration.
     Rectangle {
         id: searchPanel
         width: Math.min(610, root.width - 40)
@@ -514,10 +504,12 @@ ApplicationWindow {
         border.color: "#8298B9D8"
         visible: root.searchOpen
         z: 61
+
         ColumnLayout {
             anchors.fill: parent
             anchors.margins: 18
             spacing: 13
+
             TextField {
                 id: searchField
                 Layout.fillWidth: true
@@ -532,6 +524,7 @@ ApplicationWindow {
                 }
                 onAccepted: root.openApp(text.trim().length ? text.trim() : "NeruFiles")
             }
+
             Text {
                 text: "SUGGESTED APPS"
                 color: root.secondaryText
@@ -539,32 +532,48 @@ ApplicationWindow {
                 font.bold: true
                 font.letterSpacing: 1.4
             }
+
             Repeater {
-                model: ["NeruFiles", "NeruSettings", "NeruTerminal", "Steam"]
+                model: ["NeruFiles", "NeruSettings", "NeruTerminal", "NeruCode", "Steam"]
+
                 delegate: Rectangle {
                     required property string modelData
                     Layout.fillWidth: true
                     Layout.preferredHeight: 45
                     radius: 11
                     color: rowHover.containsMouse ? "#9C344767" : "transparent"
+
                     Row {
                         anchors.fill: parent
                         anchors.leftMargin: 10
                         spacing: 10
-                        Text { text: "◈"; color: root.cyan; font.pixelSize: 18; anchors.verticalCenter: parent.verticalCenter }
-                        Text { text: modelData; color: root.primaryText; font.pixelSize: 12; anchors.verticalCenter: parent.verticalCenter }
+                        Text {
+                            text: "◈"
+                            color: root.cyan
+                            font.pixelSize: 18
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                        Text {
+                            text: modelData
+                            color: root.primaryText
+                            font.pixelSize: 12
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
                     }
+
                     MouseArea {
                         id: rowHover
                         anchors.fill: parent
                         hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
                         onClicked: root.openApp(modelData)
                     }
                 }
             }
+
             Item { Layout.fillHeight: true }
             Text {
-                text: "ESC closes search"
+                text: "Alt + Space opens search · Esc closes"
                 color: "#7183A4"
                 font.pixelSize: 10
                 Layout.alignment: Qt.AlignRight
@@ -572,7 +581,7 @@ ApplicationWindow {
         }
     }
 
-    // Demo application windows: visual previews only.
+    // Demo application window. Opening an app changes NeruBar's menu context.
     Rectangle {
         id: appWindow
         width: Math.min(790, root.width - 100)
@@ -583,14 +592,17 @@ ApplicationWindow {
         border.color: "#8191AFCB"
         visible: root.activeApp.length > 0
         z: 62
+
         ColumnLayout {
             anchors.fill: parent
             spacing: 0
+
             Rectangle {
                 Layout.fillWidth: true
                 height: 54
                 color: "#C7192943"
                 radius: 20
+
                 RowLayout {
                     anchors.fill: parent
                     anchors.leftMargin: 18
@@ -601,17 +613,19 @@ ApplicationWindow {
                             model: ["#FF687A", "#F2C56A", "#61D69B"]
                             delegate: Rectangle {
                                 required property string modelData
-                                width: 10; height: 10; radius: 5
+                                width: 10
+                                height: 10
+                                radius: 5
                                 color: modelData
                             }
                         }
                     }
+                    Item { Layout.fillWidth: true }
                     Text {
                         text: root.activeApp
                         color: root.primaryText
                         font.pixelSize: 13
                         font.bold: true
-                        Layout.alignment: Qt.AlignHCenter
                     }
                     Item { Layout.fillWidth: true }
                     ToolButton {
@@ -620,44 +634,63 @@ ApplicationWindow {
                     }
                 }
             }
-            Rectangle { Layout.fillWidth: true; height: 1; color: "#3E59718F" }
+
+            Rectangle {
+                Layout.fillWidth: true
+                height: 1
+                color: "#3E59718F"
+            }
+
             Item {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
+
                 ColumnLayout {
                     anchors.fill: parent
                     anchors.margins: 24
                     spacing: 18
+
                     Text {
                         text: root.activeApp === "NeruSettings" ? "Personalize your space"
                               : root.activeApp === "NeruFiles" ? "Your files, beautifully organized"
                               : root.activeApp === "NeruStore" ? "Discover your next app"
                               : root.activeApp === "Steam" ? "Your game library"
+                              : root.activeApp === "NeruCode" ? "Create something new"
                               : "Welcome to " + root.activeApp
                         color: root.primaryText
                         font.pixelSize: 23
                         font.weight: Font.Medium
                     }
+
                     Text {
                         text: root.activeApp === "NeruSettings" ? "Make Nebula feel like yours."
                               : root.activeApp === "NeruFiles" ? "A clean starting point for folders and projects."
                               : root.activeApp === "NeruStore" ? "A concept storefront for the NeruOS ecosystem."
                               : root.activeApp === "Steam" ? "Gaming tools and compatible titles will live here."
-                              : "This is an interactive UI prototype, not a system service yet."
+                              : "This is an interactive shell prototype, not a system service yet."
                         color: root.secondaryText
                         font.pixelSize: 12
                         wrapMode: Text.WordWrap
                     }
+
                     RowLayout {
                         visible: root.activeApp === "NeruSettings"
-                        Button { text: "Choose wallpaper"; onClicked: wallpaperDialog.open() }
-                        Button { text: "Restore Nebula"; onClicked: root.customWallpaper = "" }
+                        Button {
+                            text: "Choose wallpaper"
+                            onClicked: wallpaperDialog.open()
+                        }
+                        Button {
+                            text: "Restore Nebula"
+                            onClicked: root.customWallpaper = ""
+                        }
                     }
+
                     GridLayout {
                         visible: root.activeApp === "NeruFiles"
                         columns: 3
                         columnSpacing: 14
                         rowSpacing: 14
+
                         Repeater {
                             model: ["Documents", "Downloads", "Pictures", "Projects", "Music", "Videos"]
                             delegate: Rectangle {
@@ -670,17 +703,29 @@ ApplicationWindow {
                                 Column {
                                     anchors.centerIn: parent
                                     spacing: 8
-                                    Text { text: "▰"; color: root.cyan; font.pixelSize: 31; anchors.horizontalCenter: parent.horizontalCenter }
-                                    Text { text: modelData; color: root.primaryText; font.pixelSize: 11; anchors.horizontalCenter: parent.horizontalCenter }
+                                    Text {
+                                        text: "▰"
+                                        color: root.cyan
+                                        font.pixelSize: 31
+                                        anchors.horizontalCenter: parent.horizontalCenter
+                                    }
+                                    Text {
+                                        text: modelData
+                                        color: root.primaryText
+                                        font.pixelSize: 11
+                                        anchors.horizontalCenter: parent.horizontalCenter
+                                    }
                                 }
                             }
                         }
                     }
+
                     GridLayout {
                         visible: root.activeApp === "NeruStore" || root.activeApp === "Steam"
                         columns: 2
                         columnSpacing: 12
                         rowSpacing: 12
+
                         Repeater {
                             model: root.activeApp === "Steam"
                                     ? ["Steam Library", "Proton Compatibility", "Controller Setup", "Game Settings"]
@@ -701,6 +746,7 @@ ApplicationWindow {
                             }
                         }
                     }
+
                     Item { Layout.fillHeight: true }
                     Text {
                         text: "NeruOS Nebula Prototype — UI preview only"
@@ -712,8 +758,86 @@ ApplicationWindow {
         }
     }
 
+    Rectangle {
+        id: aboutDialog
+        width: Math.min(420, root.width - 40)
+        height: aboutHeading === "About NeruOS" ? 250 : 300
+        anchors.centerIn: parent
+        radius: 22
+        color: "#F00D172B"
+        border.color: "#8298B9D8"
+        visible: root.aboutOpen
+        z: 70
+
+        ColumnLayout {
+            anchors.fill: parent
+            anchors.margins: 22
+            spacing: 14
+
+            Image {
+                source: "qrc:/assets/logo-mark.svg"
+                sourceSize.width: 54
+                sourceSize.height: 54
+                Layout.preferredWidth: 54
+                Layout.preferredHeight: 54
+                Layout.alignment: Qt.AlignHCenter
+            }
+            Text {
+                text: root.aboutHeading
+                color: root.primaryText
+                font.pixelSize: 21
+                font.bold: true
+                Layout.alignment: Qt.AlignHCenter
+            }
+            Text {
+                text: root.aboutHeading === "About NeruOS"
+                      ? "NeruOS Nebula — standalone shell prototype. Built with Qt 6 and QML. This is not a bootable OS image."
+                      : "Alt + Space  Open NeruSearch\nEsc  Close overlays\nMove pointer to the left edge  Reveal navigation rail\nHover over NeruDock icons  Magnify"
+                color: root.secondaryText
+                font.pixelSize: 12
+                horizontalAlignment: Text.AlignHCenter
+                wrapMode: Text.WordWrap
+                Layout.fillWidth: true
+            }
+            Item { Layout.fillHeight: true }
+            Button {
+                text: "Close"
+                Layout.alignment: Qt.AlignHCenter
+                onClicked: root.aboutOpen = false
+            }
+        }
+    }
+
     Shortcut {
         sequence: "Escape"
         onActivated: root.closeTransientUi()
+    }
+
+    Shortcut {
+        sequence: "Alt+Space"
+        onActivated: {
+            root.searchOpen = !root.searchOpen
+            root.centerOpen = false
+            root.aboutOpen = false
+            if (root.searchOpen)
+                searchField.forceActiveFocus()
+        }
+    }
+
+    Shortcut {
+        sequence: "Ctrl+Alt+1"
+        onActivated: root.activeWorkspace = "General"
+    }
+    Shortcut {
+        sequence: "Ctrl+Alt+2"
+        onActivated: root.activeWorkspace = "Coding"
+    }
+    Shortcut {
+        sequence: "Ctrl+Alt+3"
+        onActivated: root.activeWorkspace = "Gaming"
+    }
+    Shortcut {
+        sequence: "Ctrl+Alt+4"
+        onActivated: root.activeWorkspace = "Study"
     }
 }

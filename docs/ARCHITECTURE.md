@@ -38,11 +38,28 @@ No custom kernel is required for the initial milestones. Kernel configuration an
 
 The shell is being designed as a set of independent Qt/QML components:
 
-- **NeruBar** — dynamic menus based on the active application, clock, status, and quick actions.
-- **NeruDock** — floating launcher with pointer-driven magnification and active-app indicators.
+- **NeruBar** — dynamic demo-app menus, clock, status, and quick actions.
+- **NeruDock** — floating launcher with pointer-driven magnification and app aliases.
+- **NeruSearch** — installed Linux desktop-entry discovery, GIO launch, and best-effort process status.
 - **NeruCenter** — quick settings and notifications.
-- **NeruSearch** — application and settings search.
 - **NeruSpace** — workspace identity and selection.
+
+## Application catalog and launch
+
+The initial catalog is implemented in C++ with Qt's QAbstractListModel and GLib/GIO.
+
+- GIO enumerates visible launchable desktop entries.
+- The model exposes display name, desktop ID, description, executable, and best-effort process status to QML.
+- Search filters the display-name role and launches a selected entry through g_app_info_launch().
+- Dock aliases map common NeruOS app names to available Linux applications.
+- Process status is inferred by comparing distinct executable names with processes visible in /proc.
+
+The status model is intentionally conservative:
+- **Running** means a matching process name was found.
+- **Not detected** means the executable is trackable but no match was found; this does not prove no related window exists.
+- **Unverified** means a generic launcher or duplicate executable prevents reliable matching.
+
+This is not native window tracking. D-Bus, sandbox, wrapper, helper, and forked applications can be missed. The selected compositor/window manager must provide real window identity and focus integration in a future milestone.
 
 ## Important prototype boundary
 
@@ -60,6 +77,7 @@ A later milestone must select a window-management / compositor foundation or ano
 ## UI technology
 
 - Qt 6 / QML for shell components and first-party interface prototypes.
+- GLib/GIO for standard desktop application discovery and launch.
 - SVG for scalable marks and simple UI artwork.
 - C++ only where native services or integration genuinely require it.
 - Prefer desktop portals and documented session APIs over custom privileged daemons.

@@ -57,3 +57,13 @@ This file records decisions that affect the direction of the project. New decisi
 **Context:** Both components have their own interaction state and will grow independently.
 
 **Consequences:** Their APIs should remain explicit and signal-based. Parent shell state owns active application, workspace, and system-service data.
+
+## ADR-007 — Use GIO for desktop application discovery and launch
+
+**Status:** Accepted
+
+**Decision:** Use GLib/GIO application information APIs to enumerate visible desktop entries and launch them through the desktop entry metadata.
+
+**Context:** Reimplementing desktop-entry parsing and Exec field-code handling would be error-prone. GIO already provides the platform's application launch abstraction.
+
+**Consequences:** The Qt desktop prototype requires GLib/GIO development files. Process status remains best-effort until NeruOS integrates with a compositor/window manager that can provide native window identity and focus state.

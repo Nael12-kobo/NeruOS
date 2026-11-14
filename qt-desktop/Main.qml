@@ -28,6 +28,7 @@ ApplicationWindow {
     property int volume: 64
     property bool wifiEnabled: true
     property bool bluetoothEnabled: true
+    property string notificationText: ""
 
     readonly property color obsidian: "#080F1A"
     readonly property color midnight: "#151D2F"
@@ -67,6 +68,19 @@ ApplicationWindow {
         searchOpen = false
         aboutOpen = false
         activeApp = ""
+    }
+
+    function launchDockApp(alias) {
+        if (alias === "NeruSearch") {
+            openApp("NeruSearch")
+            return
+        }
+        appCatalog.launchAlias(alias)
+    }
+
+    function showNotification(message) {
+        notificationText = message
+        notificationTimer.restart()
     }
 
     function handleMenuAction(action) {
@@ -117,6 +131,26 @@ ApplicationWindow {
         repeat: true
         running: true
         onTriggered: root.currentTime = new Date()
+    }
+
+    Timer {
+        id: notificationTimer
+        interval: 4200
+        onTriggered: root.notificationText = ""
+    }
+
+    Connections {
+        target: appCatalog
+
+        function onLaunchStarted(displayName, appId) {
+            root.showNotification("Launched " + displayName)
+            root.searchOpen = false
+            root.centerOpen = false
+        }
+
+        function onLaunchError(displayName, message) {
+            root.showNotification(displayName + ": " + message)
+        }
     }
 
     FileDialog {
@@ -357,7 +391,7 @@ ApplicationWindow {
         applications: root.dockApps
         activeApplication: root.activeApp
         onApplicationRequested: function(appName) {
-            root.openApp(appName)
+            root.launchDockApp(appName)
         }
     }
 
@@ -491,11 +525,11 @@ ApplicationWindow {
         }
     }
 
-    // NeruSearch — local UI demonstration.
+    // NeruSearch — native Linux application catalog backed by GIO.
     Rectangle {
         id: searchPanel
-        width: Math.min(610, root.width - 40)
-        height: 340
+        width: Math.min(760, root.width - 40)
+        height: Math.min(590, root.height - 150)
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: topBar.bottom
         anchors.topMargin: 24
@@ -508,12 +542,37 @@ ApplicationWindow {
         ColumnLayout {
             anchors.fill: parent
             anchors.margins: 18
-            spacing: 13
+            spacing: 12
+
+            RowLayout {
+                Layout.fillWidth: true
+                Text {
+                    text: "NeruSearch"
+                    color: root.primaryText
+                    font.pixelSize: 19
+                    font.bold: true
+                }
+                Item { Layout.fillWidth: true }
+                Text {
+                    text: appCatalog.count + " installed apps"
+                    color: root.secondaryText
+                    font.pixelSize: 10
+                }
+                ToolButton {
+                    text: "↻"
+                    ToolTip.text: "Refresh application catalog"
+                    ToolTip.visible: hovered
+                    onClicked: {
+                        appCatalog.refresh()
+                        appFilter.setFilterFixedString(searchField.text)
+                    }
+                }
+            }
 
             TextField {
                 id: searchField
                 Layout.fillWidth: true
-                placeholderText: "Search apps, files, settings..."
+                placeholderText: "Search installed Linux applications..."
                 color: root.primaryText
                 placeholderTextColor: "#8292AD"
                 font.pixelSize: 15
@@ -522,43 +581,114 @@ ApplicationWindow {
                     color: "#B91A2944"
                     border.color: "#8F9277E8"
                 }
-                onAccepted: root.openApp(text.trim().length ? text.trim() : "NeruFiles")
+                onTextChanged: appFilter.setFilterFixedString(text)
+                onAccepted: {
+                    if (appList.count > 0 && appList.currentItem)
+                        appCatalog.launch(appList.currentItem.appId)
+                }
             }
 
-            Text {
-                text: "SUGGESTED APPS"
-                color: root.secondaryText
-                font.pixelSize: 10
-                font.bold: true
-                font.letterSpacing: 1.4
+            RowLayout {
+                Layout.fillWidth: true
+                Text {
+                    text: "APPLICATION"
+                    color: root.secondaryText
+                    font.pixelSize: 9
+                    font.bold: true
+                    font.letterSpacing: 1.2
+                }
+                Item { Layout.fillWidth: true }
+                Text {
+                    text: "PROCESS STATUS"
+                    color: root.secondaryText
+                    font.pixelSize: 9
+                    font.bold: true
+                    font.letterSpacing: 1.2
+                }
             }
 
-            Repeater {
-                model: ["NeruFiles", "NeruSettings", "NeruTerminal", "NeruCode", "Steam"]
+            ListView {
+                id: appList
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                clip: true
+                spacing: 4
+                model: appFilter
+                currentIndex: count > 0 ? 0 : -1
+                ScrollBar.vertical: ScrollBar {}
 
                 delegate: Rectangle {
-                    required property string modelData
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: 45
-                    radius: 11
-                    color: rowHover.containsMouse ? "#9C344767" : "transparent"
+                    id: appRow
+                    required property string displayName
+                    required property string appId
+                    required property string description
+                    required property string executable
+                    required property bool running
+                    required property int processCount
+                    required property bool trackingAvailable
+                    required property int index
 
-                    Row {
+                    width: appList.width
+                    height: 61
+                    radius: 11
+                    color: rowHover.containsMouse ? "#9C344767"
+                         : (appList.currentIndex === appRow.index ? "#4B293E5F" : "transparent")
+                    border.color: appList.currentIndex === appRow.index ? "#5578A1C0" : "transparent"
+
+                    RowLayout {
                         anchors.fill: parent
-                        anchors.leftMargin: 10
-                        spacing: 10
-                        Text {
-                            text: "◈"
-                            color: root.cyan
-                            font.pixelSize: 18
-                            anchors.verticalCenter: parent.verticalCenter
+                        anchors.leftMargin: 12
+                        anchors.rightMargin: 12
+                        spacing: 12
+
+                        Rectangle {
+                            Layout.preferredWidth: 37
+                            Layout.preferredHeight: 37
+                            radius: 11
+                            color: "#263B5B"
+                            Text {
+                                anchors.centerIn: parent
+                                text: appRow.displayName.length > 0 ? appRow.displayName.charAt(0).toUpperCase() : "A"
+                                color: root.cyan
+                                font.pixelSize: 17
+                                font.bold: true
+                            }
                         }
-                        Text {
-                            text: modelData
-                            color: root.primaryText
-                            font.pixelSize: 12
-                            anchors.verticalCenter: parent.verticalCenter
+
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: 2
+                            Text {
+                                text: appRow.displayName
+                                color: root.primaryText
+                                font.pixelSize: 12
+                                font.weight: Font.DemiBold
+                                elide: Text.ElideRight
+                                Layout.fillWidth: true
+                            }
+                            Text {
+                                text: appRow.executable + "  ·  " + appRow.appId
+                                color: root.secondaryText
+                                font.pixelSize: 9
+                                elide: Text.ElideMiddle
+                                Layout.fillWidth: true
+                            }
                         }
+
+                        Rectangle {
+                            Layout.preferredWidth: (appRow.running || !appRow.trackingAvailable) ? 105 : 95
+                            Layout.preferredHeight: 25
+                            radius: 12
+                            color: appRow.running ? "#31523F59" : "#26344A"
+                            Text {
+                                anchors.centerIn: parent
+                                text: !appRow.trackingAvailable ? "Unverified"
+                                      : (appRow.running ? "Running · " + appRow.processCount : "Not detected")
+                                color: appRow.running ? "#9DE5BD" : "#AAB6D0"
+                                font.pixelSize: 9
+                            }
+                        }
+
                     }
 
                     MouseArea {
@@ -566,18 +696,41 @@ ApplicationWindow {
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: root.openApp(modelData)
+                        z: 1
+                        onClicked: appCatalog.launch(appRow.appId)
                     }
+                }
+
+                Label {
+                    anchors.centerIn: parent
+                    visible: appList.count === 0
+                    text: appCatalog.count === 0
+                          ? "No visible desktop applications were found."
+                          : "No applications match your search."
+                    color: root.secondaryText
+                    font.pixelSize: 12
                 }
             }
 
-            Item { Layout.fillHeight: true }
-            Text {
-                text: "Alt + Space opens search · Esc closes"
-                color: "#7183A4"
-                font.pixelSize: 10
-                Layout.alignment: Qt.AlignRight
+            RowLayout {
+                Layout.fillWidth: true
+                Text {
+                    text: "Running status is detected from matching /proc process names."
+                    color: "#7183A4"
+                    font.pixelSize: 9
+                    Layout.fillWidth: true
+                }
+                Text {
+                    text: "Alt + Space  ·  Esc"
+                    color: "#7183A4"
+                    font.pixelSize: 9
+                }
             }
+        }
+
+        onVisibleChanged: {
+            if (visible)
+                searchField.forceActiveFocus()
         }
     }
 
@@ -755,6 +908,32 @@ ApplicationWindow {
                     }
                 }
             }
+        }
+    }
+
+    Rectangle {
+        id: launchToast
+        width: Math.min(560, root.width - 40)
+        height: 52
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: dock.top
+        anchors.bottomMargin: 26
+        radius: 15
+        color: "#F0101B31"
+        border.color: "#8194B4D0"
+        visible: root.notificationText.length > 0
+        z: 90
+
+        Text {
+            anchors.fill: parent
+            anchors.leftMargin: 18
+            anchors.rightMargin: 18
+            verticalAlignment: Text.AlignVCenter
+            horizontalAlignment: Text.AlignHCenter
+            text: root.notificationText
+            color: root.primaryText
+            font.pixelSize: 11
+            elide: Text.ElideRight
         }
     }
 

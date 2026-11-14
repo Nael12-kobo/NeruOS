@@ -1,5 +1,11 @@
+#include "AppCatalog.h"
+
+#include <QDebug>
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
+#include <QQmlContext>
+#include <QSortFilterProxyModel>
+#include <QTimer>
 #include <QUrl>
 
 int main(int argc, char *argv[])
@@ -8,7 +14,65 @@ int main(int argc, char *argv[])
     QGuiApplication::setApplicationName(QStringLiteral("NeruOS Nebula"));
     QGuiApplication::setOrganizationName(QStringLiteral("NeruOS"));
 
+    AppCatalogModel appCatalog;
+
+    if (app.arguments().contains(QStringLiteral("--list-apps"))) {
+        qInfo().noquote() << QStringLiteral("NeruOS application catalog: %1 launchable desktop entries")
+                                 .arg(appCatalog.count());
+        for (int row = 0; row < appCatalog.rowCount(); ++row) {
+            const QModelIndex item = appCatalog.index(row, 0);
+            const QString name = appCatalog.data(item, AppCatalogModel::DisplayNameRole).toString();
+            const QString id = appCatalog.data(item, AppCatalogModel::AppIdRole).toString();
+            const QString executable = appCatalog.data(item, AppCatalogModel::ExecutableRole).toString();
+            const bool running = appCatalog.data(item, AppCatalogModel::RunningRole).toBool();
+            const bool trackingAvailable = appCatalog.data(item, AppCatalogModel::TrackingAvailableRole).toBool();
+            const QString status = !trackingAvailable
+                ? QStringLiteral("Unverified")
+                : (running ? QStringLiteral("Running") : QStringLiteral("Not detected"));
+            qInfo().noquote() << QStringLiteral("%1 | %2 | %3 | %4")
+                                     .arg(name, id, executable, status);
+        }
+        return 0;
+    }
+
+    const int launchArgument = app.arguments().indexOf(QStringLiteral("--launch-app"));
+    if (launchArgument >= 0) {
+        if (launchArgument + 1 >= app.arguments().size()) {
+            qCritical() << "Usage: neruos-nebula --launch-app <desktop-file-id>";
+            return 2;
+        }
+
+        const QString appId = app.arguments().at(launchArgument + 1);
+        QObject::connect(&appCatalog, &AppCatalogModel::launchError,
+                         &app, [&app](const QString &name, const QString &message) {
+            qCritical().noquote() << QStringLiteral("Launch failed for %1: %2").arg(name, message);
+            app.exit(1);
+        });
+
+        if (!appCatalog.launch(appId))
+            return 1;
+
+        QTimer::singleShot(3500, &app, [&app, &appCatalog, appId]() {
+            const bool running = appCatalog.isRunning(appId);
+            qInfo().noquote() << QStringLiteral("Launch test for %1: process %2")
+                                     .arg(appId, running ? QStringLiteral("detected")
+                                                        : QStringLiteral("not detected / unverified"));
+            app.exit(running ? 0 : 1);
+        });
+        return app.exec();
+    }
+
+    QSortFilterProxyModel appFilter;
+    appFilter.setSourceModel(&appCatalog);
+    appFilter.setFilterRole(AppCatalogModel::DisplayNameRole);
+    appFilter.setFilterCaseSensitivity(Qt::CaseInsensitive);
+    appFilter.setSortRole(AppCatalogModel::DisplayNameRole);
+    appFilter.sort(0);
+
     QQmlApplicationEngine engine;
+    engine.rootContext()->setContextProperty(QStringLiteral("appCatalog"), &appCatalog);
+    engine.rootContext()->setContextProperty(QStringLiteral("appFilter"), &appFilter);
+
     const QUrl mainUrl(QStringLiteral("qrc:/qt/qml/NeruOS/Main.qml"));
 
     QObject::connect(
@@ -23,5 +87,9 @@ int main(int argc, char *argv[])
     );
 
     engine.load(mainUrl);
+    if (app.arguments().contains(QStringLiteral("--show-search")) &&
+        !engine.rootObjects().isEmpty()) {
+        engine.rootObjects().first()->setProperty("searchOpen", true);
+    }
     return app.exec();
 }

@@ -18,30 +18,33 @@ The roadmap is directional. Items are not promises of a date, and a milestone is
 
 - [x] Build the standalone Qt/QML shell application.
 - [x] Split NeruBar and NeruDock into reusable QML components.
-- [x] Add dynamic app-context menus to NeruBar.
-- [x] Add pointer-driven magnification, tooltips, and active-app indicator to NeruDock.
+- [x] Add dynamic application-context menus to NeruBar.
+- [x] Add pointer-driven magnification, tooltips, and app aliases to NeruDock.
 - [x] Add keyboard shortcuts for search and workspace selection.
 - [x] Keep the prototype isolated from the active desktop session and boot configuration.
+- [x] Discover visible desktop entries through GIO.
+- [x] Launch selected desktop entries through GIO.
+- [x] Add best-effort process status to NeruSearch.
+- [x] Add terminal application-catalog diagnostics.
+- [ ] Integrate native application/window state with the selected session architecture.
 - [ ] Verify on multiple resolutions and Wayland / X11 sessions.
 - [ ] Add keyboard navigation and reduced-motion support to all shell components.
 - [ ] Capture real runtime screenshots.
 
-## Milestone 2 — Native application integration
+## Milestone 2 — Native window integration
 
 **Status: Planned**
 
-- [ ] Discover installed applications from desktop entry files.
-- [ ] Launch applications through standard desktop APIs.
-- [ ] Track running application state and active windows.
-- [ ] Integrate focus, minimize, and close behavior.
-- [ ] Replace demo app windows with real application windows.
+- [ ] Select an explicit compositor / window-manager integration strategy.
+- [ ] Track real native windows and active-window state.
+- [ ] Integrate focus, minimize, close, and workspace state.
+- [ ] Connect NeruBar context to the actual focused application.
 - [ ] Define multi-monitor and fractional-scaling behavior.
 
 ## Milestone 3 — Session and system services
 
 **Status: Planned**
 
-- [ ] Select a window-management / compositor strategy.
 - [ ] Define the standalone login session and session startup.
 - [ ] Integrate real NetworkManager, PipeWire, and power-management controls.
 - [ ] Integrate notifications and desktop portals.
@@ -53,7 +56,7 @@ The roadmap is directional. Items are not promises of a date, and a milestone is
 **Status: Planned**
 
 - [ ] NeruSettings design and navigation.
-- [ ] NeruSearch launcher with local application discovery.
+- [ ] Expand NeruSearch indexing beyond desktop-entry display names.
 - [ ] NeruCenter integration with actual system services.
 - [ ] NeruSpace integration with the selected compositor.
 - [ ] NeruFiles requirements and design.

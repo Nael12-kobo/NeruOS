@@ -11,10 +11,10 @@ Do not run prototype code with sudo.
 ## Dependencies
 
 ~~~bash
-sudo pacman -S --needed base-devel cmake ninja qt6-base qt6-declarative qt6-svg
+sudo pacman -S --needed base-devel cmake ninja qt6-base qt6-declarative qt6-svg glib2
 ~~~
 
-Qt 6.5 or newer is required by the current CMake configuration.
+Qt 6.5 or newer and GLib/GIO 2.0 development files are required.
 
 ## Get the source
 
@@ -36,18 +36,30 @@ cmake --build build
 ./build/neruos-nebula
 ~~~
 
-Or build and run with:
+## Inspect installed applications
 
 ~~~bash
-chmod +x build.sh
-./build.sh
+./build/neruos-nebula --list-apps
+~~~
+
+Open NeruSearch immediately for a quick UI check:
+
+~~~bash
+./build/neruos-nebula --show-search
+~~~
+
+To launch a known desktop entry and run a short process-detection diagnostic:
+
+~~~bash
+./build/neruos-nebula --launch-app org.kde.dolphin.desktop
 ~~~
 
 ## Prototype controls
 
 - Hover over NeruDock icons to magnify them.
-- Click a dock icon to open its demo window.
-- NeruBar's menu labels change according to the selected demo application.
+- Click a dock alias to launch a matching installed Linux app through GIO. NeruSearch opens the installed application catalog.
+- Search installed apps by display name and click a row to launch it.
+- NeruSearch shows best-effort process status based on /proc executable-name matching.
 - Use the NeruBar search icon or Alt+Space to open NeruSearch.
 - Use the status controls to open NeruCenter.
 - Move the pointer to the far-left screen edge to reveal the hidden navigation rail.
@@ -56,17 +68,29 @@ chmod +x build.sh
 - Open NeruSettings and choose a wallpaper.
 - Press Escape to close transient UI.
 
-The dock, menus, workspace selector, and app windows are prototype-level interactions. They do not yet manage native windows or actually change system hardware settings.
+The dock, workspace selector, and demo windows are still prototype-level interactions. Process status is not native-window tracking. NeruCenter values do not actually change system hardware settings.
 
 ## Session architecture note
 
-The application runs above the current desktop session and still uses its window manager / compositor. “Standalone shell” describes the direction and component architecture; this prototype is not yet an independent login session or desktop environment.
+The application runs above the current desktop session and still uses its window manager / compositor. “Standalone shell” describes the direction and component architecture; this prototype is not yet an independent login session or complete desktop environment.
 
 ## Troubleshooting
 
-### CMake cannot find Qt 6
+### CMake cannot find Qt 6 or GIO
 
-Confirm the packages are installed and that Qt CMake package files are available. Install qt6-base and qt6-declarative, then rerun configuration from a clean build directory.
+Confirm the packages are installed. On Arch Linux, install qt6-base, qt6-declarative, qt6-svg, and glib2, then rerun configuration from a clean build directory.
+
+### An application does not appear
+
+NeruSearch currently shows desktop entries that GIO considers visible. Some packages provide no desktop entry, mark entries hidden, or register applications through other mechanisms.
+
+### An application does not launch
+
+GIO launch errors are shown in a small notification. Check that the desktop entry is valid and that the required executable and dependencies are installed.
+
+### Running status is inaccurate
+
+The current tracker matches the desktop entry executable against visible /proc process names. Helper launchers, D-Bus services, sandbox wrappers, and multiple entries sharing an executable can make the status approximate.
 
 ### SVG wallpaper or logo does not render
 

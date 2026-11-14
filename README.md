@@ -16,7 +16,7 @@
 
 The long-term direction is a **standalone NeruOS desktop shell**, not a KDE Plasma theme. The current work is a Qt Quick/QML shell prototype that runs as a normal maximized application on top of an existing Linux desktop session. It does not yet replace the window manager, compositor, login session, or desktop environment.
 
-> **Current status:** standalone shell prototype v0.2. NeruOS is not yet a bootable distribution, does not provide an installation ISO, and should not be installed as a daily-driver operating system.
+> **Current status:** standalone shell prototype v0.3. NeruOS is not yet a bootable distribution, does not provide an installation ISO, and should not be installed as a daily-driver operating system.
 
 ## Nebula design direction
 
@@ -30,29 +30,30 @@ The long-term direction is a **standalone NeruOS desktop shell**, not a KDE Plas
 
 See the [Nebula Design System](docs/DESIGN-SYSTEM.md) and [Branding Guide](docs/BRANDING.md).
 
-## Current v0.2 prototype
+## Current v0.3 prototype
 
-| Component | v0.2 status |
+| Component | v0.3 status |
 |---|---|
-| **NeruBar** | Dynamic menus change with the active demo app; status controls open NeruCenter / NeruSearch |
-| **NeruDock** | Floating dock with pointer-driven icon magnification, tooltips, and active-app indicator |
-| **NeruCenter** | Interactive UI values for Wi-Fi, Bluetooth, brightness, and volume; hardware APIs are not connected |
-| **NeruSearch** | App suggestions and keyboard shortcut |
-| **NeruSpace** | General, Coding, Gaming, and Study presets |
+| **NeruBar** | Dynamic menu groups and clickable prototype actions |
+| **NeruDock** | Pointer magnification, tooltips, app aliases, and launch requests |
+| **NeruSearch** | Discovers installed Linux desktop applications through GIO; filters and launches selected entries |
+| **Process status** | Periodically compares desktop entry executables with visible /proc process names |
+| **NeruCenter** | UI values for Wi-Fi, Bluetooth, brightness, and volume; hardware APIs are not connected |
+| **NeruSpace** | General, Coding, Gaming, and Study labels; not yet connected to a compositor |
 | **Navigation Rail** | Hidden by default; revealed from the left edge |
 | **Wallpaper** | User can choose an image for the current prototype session |
 
-These features are prototype-level UI interactions. They do not yet manage native Linux windows, launch every app, or control hardware services.
+**Process status is a best-effort indicator, not a window manager's active-window state.** Apps that launch through helper processes, D-Bus activation, sandboxes, or wrappers may not match the desktop entry executable. Multiple entries using the same executable may share a process status.
 
 ## Standalone shell strategy
 
 The project is organized around its own shell components:
 
 - **NeruBar** — dynamic app menu, clock, status area, and quick actions.
-- **NeruDock** — app launcher, active-app indicators, and magnification.
+- **NeruDock** — app launcher, active demo indicator, and magnification.
 - **NeruCenter** — quick settings and notifications.
-- **NeruSearch** — universal app and settings launcher.
-- **NeruSpace** — workspace identity and switching.
+- **NeruSearch** — installed Linux app discovery, launch, and process status.
+- **NeruSpace** — workspace identity and selection.
 - **NeruFiles / NeruStore / NeruSettings** — planned first-party applications.
 
 A standalone shell still needs a Linux graphics session and a window manager / compositor. The current prototype uses the one already running on the host machine. Replacing that foundation requires a separate engineering milestone.
@@ -63,6 +64,7 @@ A standalone shell still needs a Linux graphics session and a window manager / c
 |---|---|
 | Base system | Arch Linux |
 | Shell UI | Qt 6 and QML |
+| Application discovery / launch | GIO GAppInfo / desktop entries |
 | Current window / compositor host | Existing Linux desktop session (for safe development and testing) |
 | Long-term desktop session | Standalone NeruOS shell integration; compositor/window-management choice still to be decided |
 | Package management | pacman |
@@ -87,11 +89,12 @@ The **qt-desktop/** directory contains a standalone Qt Quick/QML shell prototype
 - Arch Linux or CachyOS
 - CMake, Ninja, and a C++17 compiler
 - Qt 6.5 or newer: Qt Quick, Qt Quick Controls 2, and Qt SVG
+- GLib / GIO 2.0 development files
 
 Install packages:
 
 ~~~bash
-sudo pacman -S --needed base-devel cmake ninja qt6-base qt6-declarative qt6-svg
+sudo pacman -S --needed base-devel cmake ninja qt6-base qt6-declarative qt6-svg glib2
 ~~~
 
 Build and run:
@@ -104,16 +107,21 @@ cmake --build build
 ./build/neruos-nebula
 ~~~
 
-Or use the helper script:
+List discovered applications from the terminal:
 
 ~~~bash
-chmod +x build.sh
-./build.sh
+./build/neruos-nebula --list-apps
+~~~
+
+To launch a known desktop entry and run a short process-detection check:
+
+~~~bash
+./build/neruos-nebula --launch-app org.kde.dolphin.desktop
 ~~~
 
 The prototype is a normal maximized application window. Close it like any other application. It does not install a shell, change your Plasma / GNOME configuration, or modify your bootloader.
 
-See [Prototype Installation](docs/INSTALLATION.md).
+See [Prototype Installation](docs/INSTALLATION.md), [Application Discovery and Launch](docs/APPLICATION-LAUNCHING.md), and [Desktop Shell Architecture](docs/DESKTOP-SHELL.md).
 
 ## Repository map
 
@@ -122,13 +130,12 @@ NeruOS/
 ├── assets/                 # Logo and brand assets
 ├── docs/                   # Project, design, architecture, and install docs
 ├── qt-desktop/
-│   ├── Main.qml            # Shell composition and prototype state
-│   ├── NeruBar.qml         # Dynamic application menu and status bar
-│   ├── NeruDock.qml        # Floating magnifying dock
-│   └── assets/             # Nebula wallpaper and logo resources
+│   ├── AppCatalog.h/.cpp   # GIO app discovery, launch, process status
+│   ├── Main.qml            # Shell composition
+│   ├── NeruBar.qml         # Dynamic menu and status bar
+│   └── NeruDock.qml        # Floating magnifying dock
 ├── .github/                # Issue and pull request templates
 ├── CHANGELOG.md
-├── CODE_OF_CONDUCT.md
 ├── CONTRIBUTING.md
 ├── LICENSE
 ├── README.md
@@ -138,12 +145,13 @@ NeruOS/
 ## Roadmap
 
 1. **Shell prototype** — standalone QML components, dynamic NeruBar, magnifying NeruDock, and keyboard interaction.
-2. **Native app integration** — reliable application discovery, launching, focus, and window state.
-3. **System services** — real NeruCenter controls, notifications, and session integration.
-4. **Desktop session engineering** — compositor / window-manager strategy, login session, crash recovery, and multi-monitor behavior.
-5. **First-party utilities** — NeruSettings, NeruSearch, NeruFiles, and NeruStore.
-6. **System image** — reproducible Arch-based image, installer, updates, rollback, and recovery.
-7. **Alpha ISO** — only after installation, recovery, and upgrade paths are tested.
+2. **Application discovery and launch** — read desktop entries, launch through GIO, and show best-effort process status.
+3. **Native window integration** — reliable application/window state, focus, minimize, and close via a chosen session architecture.
+4. **System services** — real NeruCenter controls, notifications, and session integration.
+5. **Desktop session engineering** — compositor/window-manager strategy, login session, crash recovery, and multi-monitor behavior.
+6. **First-party utilities** — NeruSettings, NeruFiles, and NeruStore.
+7. **System image** — reproducible Arch-based image, installer, updates, rollback, and recovery.
+8. **Alpha ISO** — only after installation, recovery, and upgrade paths are tested.
 
 Read the [full roadmap](docs/ROADMAP.md). Planned features are not released features.
 

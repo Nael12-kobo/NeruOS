@@ -6,7 +6,7 @@ PROFILE="$ROOT/iso/profile"
 BUILD_PROFILE="$ROOT/.cache/neruos-build-profile"
 ARCHISO_SOURCE="$ROOT/tools/archiso"
 TOOLROOT="$ROOT/.cache/iso-tools"
-WORK="$ROOT/.cache/archiso-work-vm-alpha-lean"
+WORK="$ROOT/.cache/archiso-work-vm-alpha-uefi"
 OUT="$ROOT/dist"
 APP_BUILD="$ROOT/qt-desktop/build"
 

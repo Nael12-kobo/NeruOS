@@ -15,6 +15,7 @@ qt6-declarative
 qt6-svg
 qt6-wayland
 pacman-contrib
+fakeroot
 
 # Wayland desktop session
 labwc

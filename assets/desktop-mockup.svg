@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+<title id="title">NeruOS Nebula desktop concept</title>
+<desc id="desc">Dark futuristic Linux desktop with top status bar, hidden navigation rail, floating dock, and quick settings over a violet and cyan nebula landscape.</desc>
+<defs>
+  <linearGradient id="bg" x2="0" y2="1"><stop stop-color="#060C1A"/><stop offset=".55" stop-color="#10183B"/><stop offset="1" stop-color="#090D1B"/></linearGradient>
+  <radialGradient id="planet"><stop stop-color="#8B9AFF"/><stop offset=".68" stop-color="#5337A9"/><stop offset="1" stop-color="#172B5A"/></radialGradient>
+  <linearGradient id="aurora" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#54C8EB" stop-opacity="0"/><stop offset=".38" stop-color="#54C8EB" stop-opacity=".7"/><stop offset=".7" stop-color="#9277E8" stop-opacity=".8"/><stop offset="1" stop-color="#E57BFF" stop-opacity="0"/></linearGradient>
+  <linearGradient id="dock" x2="0" y2="1"><stop stop-color="#263657" stop-opacity=".96"/><stop offset="1" stop-color="#0B1428" stop-opacity=".95"/></linearGradient>
+  <linearGradient id="logo" x1="0" y1="1" x2="1" y2="0"><stop stop-color="#54C8EB"/><stop offset=".48" stop-color="#4F8FEA"/><stop offset=".78" stop-color="#9277E8"/><stop offset="1" stop-color="#E57BFF"/></linearGradient>
+  <filter id="blur"><feGaussianBlur stdDeviation="24"/></filter>
+</defs>
+<rect width="1600" height="900" fill="url(#bg)"/>
+<circle cx="1315" cy="138" r="245" fill="url(#planet)" opacity=".92"/>
+<circle cx="1315" cy="138" r="249" fill="none" stroke="#8D9BFF" stroke-opacity=".55" stroke-width="5"/>
+<path d="M-80 250C170 80 295 370 550 200S900 45 1080 205 1370 375 1680 110" fill="none" stroke="url(#aurora)" stroke-width="90" opacity=".48" filter="url(#blur)"/>
+<path d="M-100 530C155 345 310 600 560 440S930 275 1120 420 1410 605 1680 350" fill="none" stroke="url(#aurora)" stroke-width="40" opacity=".7" filter="url(#blur)"/>
+<g fill="#DDE8FF" opacity=".75"><circle cx="95" cy="120" r="2"/><circle cx="220" cy="190" r="1.6"/><circle cx="390" cy="90" r="1.5"/><circle cx="560" cy="155" r="2"/><circle cx="735" cy="75" r="1.5"/><circle cx="930" cy="155" r="2"/><circle cx="1080" cy="55" r="1.4"/><circle cx="1500" cy="325" r="2"/><circle cx="1400" cy="410" r="1.4"/></g>
+<path d="M0 565 150 465 235 515 380 395 495 520 625 450 760 555 910 440 1065 535 1215 420 1345 500 1480 390 1600 490V900H0Z" fill="#101C3B"/>
+<path d="M0 635 165 540 290 605 425 500 570 635 715 548 855 670 1010 540 1165 638 1310 520 1460 610 1600 510V900H0Z" fill="#080F22"/>
+<path d="M0 690Q400 650 780 706T1600 682V900H0Z" fill="#11183C"/>
+<path d="M0 730Q450 690 800 738T1600 720" fill="none" stroke="#8B72E8" stroke-opacity=".62" stroke-width="4"/>
+<rect x="20" y="18" width="1560" height="54" rx="17" fill="#0A1224" fill-opacity=".86" stroke="#8EA4CC" stroke-opacity=".42"/>
+<path d="M44 55c-4 0-7-5-5-9l10-20c2-4 8-4 10 0l7 11c1 2 3 2 4 0l7-12c2-4 8-5 10-1 2 2 2 5 1 7L77 52c-2 5-8 5-11 0l-7-12c-1-2-3-2-4 0l-5 10c-1 3-4 5-6 5Z" fill="url(#logo)" transform="translate(0 -1)"/>
+<g fill="#F2F5FF" font-family="Inter, sans-serif"><text x="103" y="52" font-size="20" font-weight="650">NeruOS</text><text x="197" y="52" font-size="15" fill="#AAB6D0">File　Edit　View　Apps　Window　Help</text><text x="1280" y="52" font-size="14">◈　Wi-Fi　 ◖　100%　　⌕　 ◌　 Sat, 09:41</text></g>
+<text x="110" y="220" fill="#F2F5FF" font-family="Inter, sans-serif" font-size="55" font-weight="300">Find your flow.</text>
+<text x="112" y="258" fill="#D0D8F0" font-family="Inter, sans-serif" font-size="19">A calm space for everything you create.</text>
+<rect x="110" y="280" width="175" height="34" rx="17" fill="#101C36" fill-opacity=".76" stroke="#8295BB" stroke-opacity=".45"/>
+<circle cx="130" cy="297" r="5" fill="#54C8EB"/><text x="144" y="302" fill="#DCE7FC" font-size="12" font-family="Inter, sans-serif" letter-spacing="2">NEBULA EDITION</text>
+<rect x="1160" y="112" width="355" height="418" rx="24" fill="#0C162A" fill-opacity=".94" stroke="#8799BC" stroke-opacity=".48"/>
+<text x="1190" y="153" fill="#F2F5FF" font-family="Inter, sans-serif" font-size="22" font-weight="600">NeruCenter</text>
+<g font-family="Inter, sans-serif" font-size="15" fill="#E9EEFF">
+  <rect x="1188" y="178" width="150" height="65" rx="14" fill="#253451"/><text x="1205" y="205">◉　Wi-Fi</text><text x="1205" y="228" fill="#AAB6D0" font-size="12">Connected</text>
+  <rect x="1350" y="178" width="136" height="65" rx="14" fill="#253451"/><text x="1366" y="205">ᛒ　Bluetooth</text><text x="1366" y="228" fill="#AAB6D0" font-size="12">Enabled</text>
+  <rect x="1188" y="256" width="298" height="60" rx="14" fill="#253451"/><text x="1205" y="292">☼　Display brightness</text>
+  <rect x="1188" y="328" width="298" height="60" rx="14" fill="#253451"/><text x="1205" y="364">◖　Volume</text>
+</g>
+<rect x="292" y="790" width="1016" height="88" rx="26" fill="url(#dock)" stroke="#A3B4D8" stroke-opacity=".62" stroke-width="2"/>
+<g transform="translate(324 807)">
+  <rect width="52" height="52" rx="15" fill="#232B51"/><path d="M10 38c-4 0-6-4-4-7l11-20c2-4 8-4 10 0l6 11c1 2 3 2 4 0l7-11c2-4 8-4 10-1 2 2 2 5 1 7L43 39c-2 5-8 5-11 0l-7-12c-1-2-3-2-4 0l-5 9c-1 2-3 2-6 2" fill="url(#logo)"/>
+  <g transform="translate(78 0)"><rect width="52" height="52" rx="15" fill="#263657"/><g fill="#54C8EB"><circle cx="17" cy="17" r="5"/><circle cx="35" cy="17" r="5"/><circle cx="17" cy="35" r="5"/><circle cx="35" cy="35" r="5"/></g></g>
+  <g transform="translate(156 0)"><rect width="52" height="52" rx="15" fill="#143F66"/><path d="M10 17h32v25H10zM10 17l16-9 16 9" fill="#54C8EB"/></g>
+  <g transform="translate(234 0)"><rect width="52" height="52" rx="15" fill="#1B3854"/><circle cx="26" cy="26" r="18" fill="none" stroke="#54C8EB" stroke-width="5"/><path d="M26 8v18l15 9" fill="none" stroke="#9277E8" stroke-width="5"/></g>
+  <g transform="translate(312 0)"><rect width="52" height="52" rx="15" fill="#1D2D49"/><path d="M13 17h26v18H13zM18 39h16" fill="none" stroke="#F2F5FF" stroke-width="3"/></g>
+  <g transform="translate(390 0)"><rect width="52" height="52" rx="15" fill="#17385B"/><path d="M13 14h26v24H13zM19 20l7 6-7 6M28 33h7" fill="none" stroke="#54C8EB" stroke-width="3"/></g>
+  <g transform="translate(468 0)"><rect width="52" height="52" rx="15" fill="#1B345C"/><circle cx="26" cy="26" r="16" fill="none" stroke="#A8C5FF" stroke-width="4"/></g>
+  <g transform="translate(546 0)"><rect width="52" height="52" rx="15" fill="#3E245B"/><path d="M19 11v30l23-15z" fill="#E57BFF"/></g>
+  <g transform="translate(624 0)"><rect width="52" height="52" rx="15" fill="#183D5A"/><path d="M12 13h28v26H12zM17 32l7-7 5 5 5-8 7 10" fill="none" stroke="#54C8EB" stroke-width="3"/></g>
+  <g transform="translate(702 0)"><rect width="52" height="52" rx="15" fill="#293651"/><circle cx="26" cy="26" r="16" fill="none" stroke="#AAB6D0" stroke-width="4"/><circle cx="26" cy="26" r="6" fill="#AAB6D0"/></g>
+  <g transform="translate(780 0)"><rect width="52" height="52" rx="15" fill="#202B40"/><path d="M14 17h24l-3 28H17zM18 12h16" fill="none" stroke="#AAB6D0" stroke-width="3"/></g>
+</g>
+<g fill="#9EB2DE" font-family="Inter, sans-serif" font-size="14"><text x="40" y="860">NERUOS • NEBULA EDITION • ARCH-BASED DESKTOP CONCEPT</text><text x="1158" y="566">Quick settings · concept preview</text><text x="300" y="760">FLOATING DOCK</text></g>
+</svg>

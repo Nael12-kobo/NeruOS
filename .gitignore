@@ -1,0 +1,23 @@
+# Qt / CMake build output
+build/
+cmake-build-*/
+CMakeFiles/
+CMakeCache.txt
+compile_commands.json
+.ninja_deps
+.ninja_log
+Makefile
+
+# Qt Creator
+*.user
+*.user.*
+
+# IDE / editor
+.vscode/
+.idea/
+*.swp
+*~
+
+# OS noise
+.DS_Store
+Thumbs.db

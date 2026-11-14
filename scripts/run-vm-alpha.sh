@@ -31,21 +31,27 @@ fi
 
 # UEFI variables are writable, so use a disposable copy outside the project.
 # No virtual hard disk or host block device is attached to this VM.
-TMPBASE="$TMPDIR"
-if [[ -z "$TMPBASE" ]]; then
-    TMPBASE="/tmp"
-fi
+TMPBASE="${TMPDIR:-/tmp}"
 VM_STATE="$(mktemp -d "$TMPBASE/neruos-vm-alpha.XXXXXX")"
 trap 'rm -rf -- "$VM_STATE"' EXIT
 cp -- "$OVMF_VARS" "$VM_STATE/OVMF_VARS.fd"
 
+QEMU_ACCEL="tcg"
+QEMU_CPU="max"
+if [[ -r /dev/kvm && -w /dev/kvm ]]; then
+    QEMU_ACCEL="kvm"
+    QEMU_CPU="host"
+fi
+
 printf 'Booting %s\n' "$ISO"
 printf 'Diskless VM: 4 GiB RAM, 4 vCPUs, UEFI, NAT networking.\n'
-printf 'No host disk is attached. UEFI variable state is temporary.\n'
+printf 'Acceleration: %s. No host disk is attached.\n' "$QEMU_ACCEL"
+printf 'UEFI variable state is temporary.\n'
 
 qemu-system-x86_64 \
-    -machine q35,accel=tcg \
-    -cpu max \
+    -machine "q35,accel=$QEMU_ACCEL" \
+    -cpu "$QEMU_CPU" \
+    -monitor "unix:$VM_STATE/qemu-monitor.sock,server=on,wait=off" \
     -m 4096 \
     -smp 4 \
     -device virtio-vga \

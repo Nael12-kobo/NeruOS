@@ -1,0 +1,12 @@
+#!/bin/sh
+
+# Keep per-user logs available in the live session for VM diagnostics.
+mkdir -p "$HOME/.local/state"
+
+# Start NeruOS with Qt Quick software rendering for broad VM compatibility.
+/usr/local/bin/neruos-shell >"$HOME/.local/state/neruos-shell.log" 2>&1 &
+shell_pid=$!
+wait "$shell_pid"
+
+# Preserve a usable session if the shell exits or fails to render.
+exec foot --title="NeruOS Recovery Terminal"

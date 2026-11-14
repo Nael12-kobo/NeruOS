@@ -26,6 +26,10 @@ if ! command -v unshare >/dev/null 2>&1 || ! unshare --user --map-root-user true
     exit 1
 fi
 
+# Always start from a clean ArchISO work tree so stale build phases cannot
+# leave an older ISO in the output directory after profile changes. ArchISO
+# creates root-owned files inside its user namespace, so clean them there too.
+unshare --map-auto --map-root-user -- rm -rf -- "$WORK"
 mkdir -p "$ROOT/.cache/pacman-cache" "$WORK" "$OUT"
 "$ROOT/scripts/bootstrap-iso-tools.sh"
 

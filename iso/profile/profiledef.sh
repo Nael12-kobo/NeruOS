@@ -7,6 +7,9 @@ iso_label="NERUOS_$(date +%Y%m)"
 iso_publisher="NeruOS Project"
 iso_application="NeruOS Nebula VM Alpha Live"
 iso_version="0.4.0-alpha1"
+# Keep systemd-firstboot from opening an interactive root-password prompt on tty1.
+# The live image provisions its own user and machine ID; no firstboot wizard is needed.
+kernel_params_x86_64="systemd.firstboot=0"
 install_dir="neru"
 bootmodes=('uefi.systemd-boot')
 pacman_conf="pacman.conf"
@@ -16,15 +19,7 @@ airootfs_image_tool_options=('-comp' 'xz' '-Xbcj' 'x86' '-b' '1M' '-Xdict-size' 
 file_permissions=(
   ["/etc/shadow"]="0:0:400"
   ["/root"]="0:0:750"
-  ["/home/neru/.bash_profile"]="1000:1000:644"
-  ["/home/neru/.config"]="1000:1000:755"
-  ["/home/neru/.config/labwc"]="1000:1000:755"
-  ["/home/neru/.config/labwc/autostart"]="1000:1000:755"
-  ["/home/neru/.config/labwc/environment"]="1000:1000:644"
-  ["/home/neru/.config/labwc/rc.xml"]="1000:1000:644"
   ["/usr/local/bin/neruos-shell"]="0:0:755"
+  ["/usr/local/bin/neruos-session-autostart"]="0:0:755"
   ["/etc/systemd/system/getty@tty1.service.d/autologin.conf"]="0:0:644"
-  # Keep this last: changing the home directory to mode 750 first would
-  # prevent a rootless builder from resolving the remaining child paths.
-  ["/home/neru"]="1000:1000:755"
 )

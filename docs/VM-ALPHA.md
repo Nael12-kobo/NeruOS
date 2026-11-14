@@ -8,27 +8,27 @@ The ISO boots an Arch Linux live environment with the NeruOS Nebula shell on a l
 
 ## Current published release
 
-The current VM-only prerelease is **NeruOS v0.4.0-alpha2**, published on 14 November 2026.
+The current VM-only prerelease is **NeruOS v0.4.0-alpha3**, published on 14 November 2026.
 
-- [Download the x86_64 ISO (843 MiB)](https://github.com/Nael12-kobo/NeruOS/releases/download/v0.4.0-alpha2/neruos-vm-alpha-0.4.0-alpha2-x86_64.iso)
-- [Download the SHA-256 file](https://github.com/Nael12-kobo/NeruOS/releases/download/v0.4.0-alpha2/neruos-vm-alpha-0.4.0-alpha2-x86_64.iso.sha256)
-- [Open the GitHub release](https://github.com/Nael12-kobo/NeruOS/releases/tag/v0.4.0-alpha2)
+- [Download the x86_64 ISO (843 MiB)](https://github.com/Nael12-kobo/NeruOS/releases/download/v0.4.0-alpha3/neruos-vm-alpha-0.4.0-alpha3-x86_64.iso)
+- [Download the SHA-256 file](https://github.com/Nael12-kobo/NeruOS/releases/download/v0.4.0-alpha3/neruos-vm-alpha-0.4.0-alpha3-x86_64.iso.sha256)
+- [Open the GitHub release](https://github.com/Nael12-kobo/NeruOS/releases/tag/v0.4.0-alpha3)
 
 Expected ISO SHA-256:
 
 ~~~text
-b3982354d96c310e6b743d5608e0298bef3a1e817f499e70c20b4a4ee7db7ab5
+435e97914e1c31555e2a1a763f92032a17f17f655f40fc711c439e45bf1a1ac4
 ~~~
 
 Verify the downloaded image before booting it:
 
 ~~~bash
-sha256sum -c neruos-vm-alpha-0.4.0-alpha2-x86_64.iso.sha256
+sha256sum -c neruos-vm-alpha-0.4.0-alpha3-x86_64.iso.sha256
 ~~~
 
 This is a VM testing release only. It has no installer and must not be treated as a persistent operating-system image.
 
-The `main` source branch has since gained native foreign-toplevel tracking for the dock. That post-Alpha2 code is not included in this published ISO; a new VM prerelease should follow a dedicated labwc regression pass.
+Alpha3 includes native foreign-toplevel tracking for NeruDock. The dock reads native app IDs and active state in labwc, reflects open windows in its running indicators, and can activate an existing matching app window. The compositor protocol is optional; unsupported compositors retain the process-based fallback. Dedicated UI controls for minimize/maximize/close remain future work.
 
 ## Safety model
 
@@ -89,7 +89,7 @@ It does not call sudo. If unprivileged user namespaces are disabled, the script 
 Or pass an explicit ISO path:
 
 ~~~bash
-./scripts/run-vm-alpha.sh dist/neruos-vm-alpha-0.4.0-alpha2-x86_64.iso
+./scripts/run-vm-alpha.sh dist/neruos-vm-alpha-0.4.0-alpha3-x86_64.iso
 ~~~
 
 To test the Legacy BIOS / Syslinux path:
@@ -126,20 +126,36 @@ The autologin starts the live user session and launches labwc. NeruOS starts aut
 
 ## Testing checklist
 
-- [ ] UEFI boot entry is named NeruOS Nebula Edition.
+- [x] UEFI boot entry is named NeruOS Nebula Edition.
 - [ ] The default live entry starts without a 15-second boot-menu delay.
-- [ ] Live user session starts.
-- [ ] labwc starts without a black screen.
-- [ ] NeruOS shell opens automatically.
+- [x] Live user session starts.
+- [x] labwc starts without a black screen.
+- [x] NeruOS shell opens automatically.
 - [ ] NeruOS Boot Animation shows the animated N logo, ripples, and loading dots.
-- [ ] Boot Animation fades into the Nebula desktop.
-- [ ] NeruDock magnification works.
+- [x] Boot Animation fades into the Nebula desktop.
+- [x] NeruDock magnification works.
 - [ ] NeruSearch lists installed desktop applications.
 - [ ] A native Linux application launches.
-- [ ] Super+Enter opens the recovery terminal.
+- [x] Super+Enter opens the recovery terminal.
 - [ ] Network connectivity works.
 - [ ] Update checker shows package status.
 - [ ] Shutdown and reboot return to the ISO without changing host disks.
+
+## v0.4.0-alpha3 release smoke test
+
+The alpha3 image was built from the main source branch and booted in two independent diskless QEMU VMs.
+
+Verified during this run:
+- [x] UEFI / GRUB boot reaches the full NeruOS Nebula desktop.
+- [x] Legacy BIOS / Syslinux boot reaches the full NeruOS Nebula desktop.
+- [x] The Wayland session starts under labwc and launches NeruOS automatically.
+- [x] The boot splash completes and transitions to the Nebula wallpaper, NeruBar, and NeruDock.
+- [x] A Foot terminal launched by Super+Enter appears as a native labwc toplevel.
+- [x] `neruos-shell --list-windows` inside the guest lists both the NeruOS shell and Foot terminal, including app IDs and active state.
+- [x] The Foot terminal maps to the `neruterminal` dock alias and its running indicator appears in the dock.
+- [x] The QEMU test VMs have no virtual disk attached; the ISO is read-only.
+
+The guest test confirms native toplevel discovery and dock running state in labwc. Dedicated dock UI controls for minimize/maximize/close, physical-hardware tests, persistent installation, updates, and recovery are not part of this release.
 
 ## v0.4.0-alpha1 release smoke test
 

@@ -2,15 +2,15 @@
 
 All notable project changes will be recorded here.
 
-## Unreleased — Native window tracking for NeruDock
+## v0.4.0-alpha3 — Native window tracking
 
 - Added a Wayland client for the WLR foreign-toplevel protocol, with native window titles, app IDs, focus/state updates, and activation/minimize/maximize/close requests.
 - Replaced NeruDock's process-only running indicators with native app-window state when supported by the compositor; retained the process-based fallback for unsupported sessions.
 - Mapped native app IDs back to GIO desktop-entry aliases so clicking an open dock app activates its existing window rather than launching a duplicate.
-- Added `--list-windows` for inspecting native window IDs, titles, focus state, and dock alias mapping.
-- Kept the command-line diagnostics isolated from hardware service polling.
-- These are source-branch changes only; the public v0.4.0-alpha2 ISO is unchanged pending a labwc VM regression pass.
-
+- Added `--list-windows` for inspecting native window titles, app IDs, focus state, and dock alias mapping.
+- Kept command-line diagnostics isolated from hardware service polling.
+- Boot-tested the image to the Nebula desktop through UEFI/GRUB and Legacy BIOS/Syslinux in independent diskless QEMU virtual machines.
+- Verified native window discovery and the terminal running indicator in the labwc guest session.
 
 ## v0.4.0-alpha2 — Bluetooth process stability and BIOS smoke test
 

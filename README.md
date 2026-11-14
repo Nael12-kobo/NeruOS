@@ -16,19 +16,19 @@
 
 The long-term direction is a **standalone NeruOS desktop shell**, not a KDE Plasma theme. The VM Alpha image now starts its own Wayland session with labwc and launches the native Qt 6 / C++ / QML Nebula shell. labwc manages native windows and virtual desktops; NeruOS provides the desktop UI, dock, quick settings, notifications, app search, file manager, settings, and session panel.
 
-> **Published image:** v0.4.0-alpha2 is a diskless x86_64 live ISO with themed UEFI GRUB and Legacy BIOS Syslinux boot paths. UEFI previously reached the full Nebula desktop in QEMU; alpha2 also booted to the full desktop in GNOME Boxes using its BIOS virtual machine. No installer is included, and VM helpers do not attach host disks. NeruOS remains an early VM-only prototype and is not ready for installation on physical hardware. The `main` branch contains newer, unreleased source changes; those are not included in the already-published Alpha2 ISO.
+> **Published image:** v0.4.0-alpha3 is a diskless x86_64 live ISO with themed UEFI GRUB and Legacy BIOS Syslinux boot paths. Both paths have reached the full Nebula desktop in independent QEMU virtual machines. Alpha3 adds native Wayland toplevel tracking to NeruDock when the compositor provides the WLR foreign-toplevel protocol. No installer is included, and the VM helpers do not attach host disks. NeruOS remains an early VM-only prototype and is not ready for installation on physical hardware.
 
 ## Download VM Alpha
 
-The current VM-only ISO and its checksum are published in the [NeruOS v0.4.0-alpha2 GitHub Release](https://github.com/Nael12-kobo/NeruOS/releases/tag/v0.4.0-alpha2).
+The current VM-only ISO and its checksum are published in the [NeruOS v0.4.0-alpha3 GitHub Release](https://github.com/Nael12-kobo/NeruOS/releases/tag/v0.4.0-alpha3).
 
-- [Download the x86_64 ISO (843 MiB)](https://github.com/Nael12-kobo/NeruOS/releases/download/v0.4.0-alpha2/neruos-vm-alpha-0.4.0-alpha2-x86_64.iso)
-- [Download the SHA-256 checksum](https://github.com/Nael12-kobo/NeruOS/releases/download/v0.4.0-alpha2/neruos-vm-alpha-0.4.0-alpha2-x86_64.iso.sha256)
+- [Download the x86_64 ISO (843 MiB)](https://github.com/Nael12-kobo/NeruOS/releases/download/v0.4.0-alpha3/neruos-vm-alpha-0.4.0-alpha3-x86_64.iso)
+- [Download the SHA-256 checksum](https://github.com/Nael12-kobo/NeruOS/releases/download/v0.4.0-alpha3/neruos-vm-alpha-0.4.0-alpha3-x86_64.iso.sha256)
 
-The ISO is for VM testing only. UEFI and Legacy BIOS boot paths have both been exercised; the alpha2 BIOS smoke test used GNOME Boxes. There is no installer.
+The ISO is for VM testing only. Alpha3 was booted to the Nebula desktop through UEFI and Legacy BIOS using separate diskless QEMU VMs. The labwc session's native window list and dock running indicator were also verified in the guest. There is no installer.
 
 ```bash
-sha256sum -c neruos-vm-alpha-0.4.0-alpha2-x86_64.iso.sha256
+sha256sum -c neruos-vm-alpha-0.4.0-alpha3-x86_64.iso.sha256
 ```
 
 
@@ -50,7 +50,7 @@ See the [Nebula Design System](docs/DESIGN-SYSTEM.md) and [Branding Guide](docs/
 |---|---|
 | **NeruBar** | Native menu bar, workspace label, clock, system status, and actions |
 | **Window management** | labwc manages native windows, focus, minimize/maximize, snap, close, and window switching |
-| **NeruDock** | Individual PNG app icons, hover magnification, launch aliases, and running indicators |
+| **NeruDock** | Individual PNG app icons, hover magnification, launch aliases, and compositor-backed running/active indicators where supported |
 | **NeruSearch** | Discovers and launches installed Linux desktop applications through GIO |
 | **NeruCenter** | NetworkManager Wi-Fi, PipeWire/WirePlumber audio, BlueZ Bluetooth with bounded command execution, brightness, and battery status where hardware is available |
 | **Notification Center** | Receives freedesktop notifications through the session D-Bus and keeps recent session history |
@@ -167,7 +167,7 @@ NeruOS/
 
 ## Roadmap
 
-The detailed milestone status and acceptance criteria are maintained in [docs/ROADMAP.md](docs/ROADMAP.md). The current main branch has begun native toplevel tracking for the dock; UI wiring for minimize/maximize/close, compositor-specific regression testing, persistent installation, signed updates, rollback, and hardware validation remain future work.
+The detailed milestone status and acceptance criteria are maintained in [docs/ROADMAP.md](docs/ROADMAP.md). Alpha3 includes native toplevel tracking for NeruDock. Dedicated minimize/maximize/close UI controls, broader compositor regression testing, persistent installation, signed updates, rollback, and hardware validation remain future work.
 
 Read the [full roadmap](docs/ROADMAP.md). Planned features are not released features.
 

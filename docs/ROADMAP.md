@@ -1,6 +1,6 @@
 # NeruOS Roadmap
 
-The roadmap is directional. Items are not promises of a date, and a milestone is complete only when its acceptance criteria are met. Status reflects the main source branch as of 14 November 2026. The public v0.4.0-alpha2 ISO is an earlier snapshot and does not include post-release source changes.
+The roadmap is directional. Items are not promises of a date, and a milestone is complete only when its acceptance criteria are met. Status reflects the main source branch and public VM Alpha state as of 14 November 2026. The latest public image is v0.4.0-alpha3.
 
 ## Milestone 0 — Public project foundation
 
@@ -38,7 +38,7 @@ The roadmap is directional. Items are not promises of a date, and a milestone is
 - [ ] Drive NeruBar application context from the focused native window.
 - [x] Add native-handle activation, minimize, maximize, and close operations to the window model.
 - [ ] Wire minimize/maximize/close into dedicated NeruOS UI controls and test them in the labwc VM.
-- [ ] Run a dedicated native-window regression pass in the VM Alpha labwc session; current host Wayland smoke test does not replace this.
+- [x] Run native-window discovery smoke test inside the VM Alpha labwc session and verify app IDs, focus state, and the dock running indicator.
 - [ ] Define multi-monitor and fractional-scaling behavior.
 
 ## Milestone 3 — Session and system services
@@ -94,13 +94,14 @@ The roadmap is directional. Items are not promises of a date, and a milestone is
 
 ## Milestone 7 — VM Alpha release
 
-**Status: Published — v0.4.0-alpha2 (14 November 2026)**
+**Status: Published — v0.4.0-alpha3 (14 November 2026)**
 
 - [x] Publish the x86_64 live ISO with UEFI GRUB and Legacy BIOS Syslinux boot paths.
 - [x] Boot to the Nebula desktop through the UEFI VM path.
-- [x] Boot to the Nebula desktop through the Legacy BIOS path in GNOME Boxes.
+- [x] Boot to the Nebula desktop through the Legacy BIOS / Syslinux path in QEMU.
 - [x] Verify core shell windows, workspaces, notifications, and available VM hardware status.
-- [x] Publish the ISO and SHA-256 checksum in the GitHub prerelease.
+- [x] Verify labwc native toplevel discovery and NeruDock running indicators in the guest.
+- [x] Publish the v0.4.0-alpha3 ISO and SHA-256 checksum in the GitHub prerelease.
 - [x] Keep the image VM-only, without an installer or host-disk attachment in the supplied VM helper scripts.
 - [ ] Collect additional VM compatibility reports and maintain a repeatable regression matrix.
 

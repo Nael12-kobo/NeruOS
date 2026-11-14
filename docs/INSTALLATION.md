@@ -1,6 +1,6 @@
 # Development Installation
 
-NeruOS does not have an installable ISO yet. This guide explains how to build the current standalone shell prototype on an existing Arch Linux or CachyOS system.
+NeruOS does not yet provide a persistent installer. A separate VM-only live ISO is published for disposable virtual-machine testing; it is not an installation image. This guide explains how to build the standalone shell prototype on an existing Arch Linux or CachyOS system.
 
 ## Safety
 
@@ -68,7 +68,11 @@ To launch a known desktop entry and run a short process-detection diagnostic:
 - Open NeruSettings and choose a wallpaper.
 - Press Escape to close transient UI.
 
-The dock, workspace selector, and demo windows are still prototype-level interactions. Process status is not native-window tracking. NeruCenter values do not actually change system hardware settings.
+The dock's running indicators are still based on best-effort process-name matching, not native window identity. Workspace and basic window actions are sent through wtype and require matching compositor key bindings; the VM Alpha labwc profile supplies those bindings. They are not a replacement for a native toplevel-management API.
+
+NeruCenter reads and controls real session services when available: NetworkManager for Wi-Fi, PipeWire/WirePlumber for audio, and BlueZ for Bluetooth. Brightness and battery depend on hardware interfaces and user permissions. Controls report unavailable when a service, device, or authorization is missing; the shell does not run as root to force access.
+
+The Session Panel uses systemd-logind for session and power actions and swaylock for screen locking when those tools and policies are present.
 
 ## Session architecture note
 

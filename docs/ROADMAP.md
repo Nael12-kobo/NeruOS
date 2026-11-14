@@ -1,6 +1,6 @@
 # NeruOS Roadmap
 
-The roadmap is directional. Items are not promises of a date, and a milestone is only complete when its acceptance criteria are met.
+The roadmap is directional. Items are not promises of a date, and a milestone is complete only when its acceptance criteria are met. Status reflects the repository and VM Alpha state as of 14 November 2026.
 
 ## Milestone 0 — Public project foundation
 
@@ -12,67 +12,73 @@ The roadmap is directional. Items are not promises of a date, and a milestone is
 - [x] Create the logo and initial visual assets in SVG.
 - [x] Create a public source repository and contribution guidelines.
 
-## Milestone 1 — Standalone shell prototype
+## Milestone 1 — Nebula desktop shell
 
 **Status: In progress**
 
-- [x] Build the standalone Qt/QML shell application.
-- [x] Split NeruBar and NeruDock into reusable QML components.
-- [x] Add dynamic application-context menus to NeruBar.
-- [x] Add pointer-driven magnification, tooltips, and app aliases to NeruDock.
-- [x] Add keyboard shortcuts for search and workspace selection.
-- [x] Keep the prototype isolated from the active desktop session and boot configuration.
-- [x] Discover visible desktop entries through GIO.
-- [x] Launch selected desktop entries through GIO.
-- [x] Add best-effort process status to NeruSearch.
-- [x] Add terminal application-catalog diagnostics.
-- [ ] Integrate native application/window state with the selected session architecture.
-- [ ] Verify on multiple resolutions and Wayland / X11 sessions.
-- [ ] Add keyboard navigation and reduced-motion support to all shell components.
-- [ ] Capture real runtime screenshots.
+- [x] Build the Qt 6 / C++ / QML shell and reusable desktop components.
+- [x] Add NeruBar menus, system status, clock, and quick actions.
+- [x] Add NeruDock icons, aliases, tooltips, and pointer-driven magnification.
+- [x] Add NeruSearch with GIO desktop-entry discovery and application launch.
+- [x] Add NeruFiles, NeruSettings, NeruCenter, Notification Center, and Session Panel.
+- [x] Add boot animation and saved appearance / dock preferences.
+- [ ] Replace process-name indicators with compositor-backed native window state.
+- [ ] Complete keyboard navigation and reduced-motion behavior across shell components.
+- [ ] Verify layouts on multiple resolutions, fractional scaling, and multi-monitor setups.
 
 ## Milestone 2 — Native window integration
 
-**Status: Planned**
+**Status: In progress**
 
-- [ ] Select an explicit compositor / window-manager integration strategy.
-- [ ] Track real native windows and active-window state.
-- [ ] Integrate focus, minimize, close, and workspace state.
-- [ ] Connect NeruBar context to the actual focused application.
+- [x] Select labwc as the Wayland compositor / window manager for the VM Alpha session.
+- [x] Delegate native window management and virtual desktops to labwc.
+- [x] Connect core workspace and window actions through compositor keyboard shortcuts.
+- [ ] Consume a real native toplevel list and active-window state.
+- [ ] Make dock running indicators and window switching represent actual windows, not /proc process-name guesses.
+- [ ] Drive NeruBar application context from the focused native window.
+- [ ] Define reliable focus, minimize, maximize, close, and workspace behavior using native window identifiers.
 - [ ] Define multi-monitor and fractional-scaling behavior.
 
 ## Milestone 3 — Session and system services
 
-**Status: Planned**
+**Status: In progress**
 
-- [ ] Define the standalone login session and session startup.
-- [ ] Integrate real NetworkManager, PipeWire, and power-management controls.
-- [ ] Integrate notifications and desktop portals.
-- [ ] Add shell crash recovery and safe fallback session.
-- [ ] Test Wayland and required compatibility paths.
+- [x] Read and control Wi-Fi through NetworkManager where the session user is authorized.
+- [x] Read and control volume through PipeWire / WirePlumber.
+- [x] Read and control Bluetooth through BlueZ with bounded command execution.
+- [x] Report brightness and battery only when the hardware exposes usable devices.
+- [x] Receive desktop notifications through the session D-Bus.
+- [x] Use systemd-logind for session and power actions.
+- [x] Provide a PAM-backed screen lock using swaylock.
+- [ ] Integrate desktop portals and verify file-picker / screen-sharing permissions.
+- [ ] Add shell crash recovery and a safe fallback session.
+- [ ] Exercise network, audio, Bluetooth, lock, suspend, reboot, and power-off on physical hardware.
 
 ## Milestone 4 — First-party utilities
 
-**Status: Planned**
+**Status: In progress**
 
-- [ ] NeruSettings design and navigation.
-- [ ] Expand NeruSearch indexing beyond desktop-entry display names.
-- [ ] NeruCenter integration with actual system services.
-- [ ] NeruSpace integration with the selected compositor.
-- [ ] NeruFiles requirements and design.
-- [ ] NeruStore requirements and package trust model.
+- [x] Implement NeruSettings for saved wallpaper, appearance, accent, and dock preferences.
+- [x] Implement NeruFiles with navigation and basic file operations.
+- [x] Implement NeruSearch for installed Linux application discovery and launch.
+- [x] Implement NeruCenter hardware status and controls where supported.
+- [x] Implement Notification Center and Session Panel.
+- [ ] Expand search indexing beyond desktop-entry display names.
+- [ ] Define NeruStore requirements, package sources, signature checks, and trust model.
 
 ## Milestone 5 — System engineering
 
-**Status: Planned**
+**Status: In progress**
 
-- [ ] Define supported hardware and minimum requirements.
-- [ ] Establish reproducible package build scripts.
-- [ ] Define system update and rollback strategy.
-- [ ] Build a testable archiso profile.
-- [ ] Add an installer and recovery documentation.
-- [ ] Test fresh install, upgrade, rollback, and recovery.
-- [ ] Add automated CI for prototype builds and package metadata.
+- [x] Create an ArchISO-based x86_64 live profile.
+- [x] Build the image through a repository-local helper without installing packages on the host.
+- [x] Provide diskless VM launch helpers for UEFI and Legacy BIOS testing.
+- [x] Document VM safety, build steps, boot paths, and smoke-test results.
+- [ ] Define supported hardware and minimum requirements from real test results.
+- [ ] Establish a signed NeruOS package repository and project update channel.
+- [ ] Implement a persistent installer and first-boot account provisioning.
+- [ ] Implement upgrade, rollback, and recovery flows.
+- [ ] Add automated tests for shell behavior, package metadata, and image release gates.
 
 ## Milestone 6 — Gaming and compatibility
 
@@ -82,15 +88,33 @@ The roadmap is directional. Items are not promises of a date, and a milestone is
 - [ ] Test Vulkan and Gamescope on supported GPUs.
 - [ ] Maintain a per-game compatibility test log.
 - [ ] Document controller, audio, and capture behavior.
-- [ ] Clearly list anti-cheat limitations.
-- [ ] Keep native Windows as a fallback for incompatible titles.
+- [ ] Clearly list anti-cheat limitations and retain a native Windows fallback for incompatible titles.
 
-## Milestone 7 — Alpha release
+## Milestone 7 — VM Alpha release
 
-**Status: Not started**
+**Status: Published — v0.4.0-alpha2 (14 November 2026)**
 
-An alpha ISO will only be published after the session, installer, boot flow, system updates, recovery, and hardware support have been exercised on test machines. No ISO is currently available.
+- [x] Publish the x86_64 live ISO with UEFI GRUB and Legacy BIOS Syslinux boot paths.
+- [x] Boot to the Nebula desktop through the UEFI VM path.
+- [x] Boot to the Nebula desktop through the Legacy BIOS path in GNOME Boxes.
+- [x] Verify core shell windows, workspaces, notifications, and available VM hardware status.
+- [x] Publish the ISO and SHA-256 checksum in the GitHub prerelease.
+- [x] Keep the image VM-only, without an installer or host-disk attachment in the supplied VM helper scripts.
+- [ ] Collect additional VM compatibility reports and maintain a repeatable regression matrix.
+
+A published VM Alpha is a disposable testing image. It is not a persistent installer and does not establish physical-hardware readiness.
+
+## Milestone 8 — Persistent installation and Hardware Alpha
+
+**Status: Planned**
+
+- [ ] Finalize the supported hardware list and installation requirements.
+- [ ] Implement and test a persistent installer with safe disk-selection safeguards.
+- [ ] Provision user accounts, login manager, permissions, and recovery access.
+- [ ] Sign project packages and update metadata; verify upgrade and rollback behavior.
+- [ ] Test boot, graphics, networking, audio, Bluetooth, battery, suspend, and recovery on target laptops.
+- [ ] Publish a hardware Alpha only after installation, update, rollback, and recovery acceptance tests pass.
 
 ## Proposing roadmap changes
 
-Open an issue with the milestone, user problem, proposed outcome, risk, and acceptance criteria. Large changes should be discussed before implementation.
+Open an issue with the milestone, user problem, proposed outcome, risk, and acceptance criteria. Large architectural changes should be discussed before implementation.

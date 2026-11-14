@@ -122,9 +122,10 @@ D-Bus-activated apps, sandbox wrappers, helper processes, and apps that fork may
 
 ## Other limitations
 
-- NeruCenter values are local UI state and do not alter NetworkManager, Bluetooth, audio, brightness, or power settings.
-- Workspace selection changes the prototype's workspace label only; it is not yet connected to a compositor.
-- No independent login session, window manager, compositor, or installer is provided. The UEFI VM Alpha ISO is still being built and has not been published yet.
+- NeruCenter uses NetworkManager, PipeWire/WirePlumber, and BlueZ when available; brightness and battery depend on exposed hardware and session permissions. Missing services or devices are reported as unavailable.
+- Workspace and basic window actions are sent through wtype and depend on the active compositor's key bindings. The VM Alpha labwc profile provides those bindings, but the shell does not yet consume native window identities or authoritative focus state.
+- Dock running indicators still use best-effort process-name matching, not native-window tracking.
+- This development prototype runs as an ordinary application on the active desktop and does not replace that desktop's session. The separate VM Alpha image launches the shell under labwc and is publicly available for disposable VM-only testing; it does not include a persistent installer or claim physical-hardware support. See [VM Alpha Safety and Testing](../docs/VM-ALPHA.md).
 
 ## Nebula desktop visual shell
 

@@ -6,6 +6,28 @@ NeruOS VM Alpha is a live ISO intended for virtual-machine testing only. It is n
 
 The ISO boots an Arch Linux live environment with the NeruOS Nebula shell on a lightweight Wayland session. The x86_64 image supports UEFI through a themed GRUB menu and Legacy BIOS through the ArchISO-supported Syslinux compatibility path. Both menus share the NeruOS dark navy and blue-violet visual identity.
 
+## Current published release
+
+The current VM-only prerelease is **NeruOS v0.4.0-alpha2**, published on 14 November 2026.
+
+- [Download the x86_64 ISO (843 MiB)](https://github.com/Nael12-kobo/NeruOS/releases/download/v0.4.0-alpha2/neruos-vm-alpha-0.4.0-alpha2-x86_64.iso)
+- [Download the SHA-256 file](https://github.com/Nael12-kobo/NeruOS/releases/download/v0.4.0-alpha2/neruos-vm-alpha-0.4.0-alpha2-x86_64.iso.sha256)
+- [Open the GitHub release](https://github.com/Nael12-kobo/NeruOS/releases/tag/v0.4.0-alpha2)
+
+Expected ISO SHA-256:
+
+~~~text
+b3982354d96c310e6b743d5608e0298bef3a1e817f499e70c20b4a4ee7db7ab5
+~~~
+
+Verify the downloaded image before booting it:
+
+~~~bash
+sha256sum -c neruos-vm-alpha-0.4.0-alpha2-x86_64.iso.sha256
+~~~
+
+This is a VM testing release only. It has no installer and must not be treated as a persistent operating-system image.
+
 ## Safety model
 
 - The ISO boots from read-only installation media.

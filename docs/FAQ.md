@@ -2,15 +2,21 @@
 
 ## Is NeruOS ready to install?
 
-No. NeruOS is in its early design and prototype stage. There is no bootable ISO or supported installer yet.
+No. NeruOS has a public VM-only live ISO, currently v0.4.0-alpha2, for disposable virtual-machine testing. It does not include a persistent installer and is not supported for installation on physical hardware.
 
-## Is this just a macOS theme for Arch Linux?
+See the [VM Alpha testing guide](VM-ALPHA.md) for downloads, checksum verification, and safe testing instructions.
 
-No. The Nebula visual direction borrows broad ideas such as a clean global status area and floating launcher, but the project is intended to develop its own interaction rules, components, identity, and applications.
+## Is NeruOS just a macOS theme for Arch Linux?
+
+No. The Nebula visual direction uses broad desktop ideas such as a clean status area and floating launcher, but NeruOS has its own shell components, interaction rules, identity, and first-party utilities.
 
 ## Does the current prototype replace KDE Plasma?
 
-No. It is a standalone Qt/QML application that runs on top of an existing desktop session. Plasma integration is a future milestone.
+The host development prototype runs as an ordinary Qt application over an existing desktop session and does not replace it. The separate VM Alpha image starts a dedicated labwc Wayland session with the NeruOS shell. Neither provides a persistent installation yet.
+
+## Does NeruOS manage application windows?
+
+labwc manages native windows in the VM Alpha session, including focus, minimize/maximize, close, switching, and virtual desktops. NeruOS sends selected actions to the compositor, but its dock process indicators are still best-effort and the shell does not yet maintain a complete native toplevel list or focused-window identity.
 
 ## Can NeruOS run Windows applications?
 
@@ -22,12 +28,12 @@ Do not assume so. Valorant's Vanguard anti-cheat relies on Windows-specific low-
 
 ## Will NeruOS use its own kernel?
 
-Not for the initial milestone. The project starts from the Arch Linux kernel and will only consider kernel changes when there is a clear engineering reason.
+Not for the initial milestones. The project starts from the Arch Linux kernel and will only consider kernel changes when there is a clear engineering reason.
 
-## Why KDE Plasma first?
+## Why is labwc used?
 
-Plasma and KWin provide mature window management and desktop infrastructure. Starting there lets the project focus on the Nebula identity and utilities rather than rebuilding every desktop subsystem at once.
+labwc provides the Wayland compositor and window-management foundation for the VM Alpha session. This lets NeruOS focus on the shell UI and first-party utilities instead of implementing a compositor.
 
 ## How can I help?
 
-Try the prototype, report bugs, suggest design improvements, improve documentation, or propose a focused change. See CONTRIBUTING.md.
+Try the VM Alpha image safely, report bugs, suggest design improvements, improve documentation, or propose a focused change. See CONTRIBUTING.md.

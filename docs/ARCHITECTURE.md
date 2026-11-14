@@ -1,23 +1,23 @@
-# NeruOS Architecture — Standalone Shell Direction
+# NeruOS Architecture
 
-This is a living architecture document. It describes the intended direction and current prototype boundaries.
+This document describes the current implementation and the boundaries between the NeruOS shell, the Wayland session, and the Arch base system.
 
 ## High-level layers
 
 ~~~text
 +----------------------------------------------------------+
-| NeruOS first-party applications                          |
-| NeruFiles | NeruStore | NeruSettings | NeruSearch        |
+| NeruOS first-party utilities                              |
+| NeruFiles | NeruSettings | NeruSearch | NeruStore (planned)|
 +----------------------------------------------------------+
-| NeruOS standalone shell UI                               |
-| NeruBar | NeruDock | NeruCenter | NeruSpace              |
+| NeruOS desktop shell                                      |
+| NeruBar | NeruDock | NeruCenter | NeruSpace               |
+| Notification Center | Session Panel                       |
 +----------------------------------------------------------+
-| Linux desktop session infrastructure                     |
-| Display server / compositor / window management          |
-| (host-provided during current prototype stage)            |
+| Wayland session infrastructure                            |
+| labwc compositor / window manager (VM Alpha session)      |
 +----------------------------------------------------------+
 | Arch Linux userland                                       |
-| systemd | pacman | PipeWire | NetworkManager | portals    |
+| systemd | pacman | PipeWire | NetworkManager | BlueZ       |
 +----------------------------------------------------------+
 | Linux kernel + hardware drivers                           |
 +----------------------------------------------------------+
@@ -25,81 +25,92 @@ This is a living architecture document. It describes the intended direction and 
 
 ## Base system
 
-- **Arch Linux** is the intended base for package availability and a rolling-release development model.
-- **systemd** is the service manager inherited from the base.
-- **pacman** is the initial package manager.
-- **archiso** is the planned tool for building installation media after the shell and recovery strategy are stable.
+- **Arch Linux** is the base for package availability and a rolling-release development model.
+- **systemd** provides service and login-session management.
+- **pacman** manages Arch base packages.
+- **archiso** builds the current x86_64 VM-only live image.
+- The current live image is for virtual-machine testing. It is not a persistent installer.
 
-No custom kernel is required for the initial milestones. Kernel configuration and patches must be justified by a measurable need.
+No custom kernel is required for the current milestones. Kernel configuration and patches must be justified by a measurable need.
 
-## Standalone shell strategy
+## Shell and session strategy
 
-**Decision:** NeruOS will develop its own shell UI instead of targeting a KDE Plasma theme as its primary desktop experience.
+NeruOS develops its own Qt 6 / C++ / QML desktop shell. It is not a KDE Plasma theme.
 
-The shell is being designed as a set of independent Qt/QML components:
+There are two supported development contexts:
 
-- **NeruBar** — dynamic demo-app menus, clock, status, and quick actions.
-- **NeruDock** — floating launcher with pointer-driven magnification and app aliases.
-- **NeruSearch** — installed Linux desktop-entry discovery, GIO launch, and best-effort process status.
-- **NeruCenter** — quick settings and notifications.
-- **NeruSpace** — workspace identity and selection.
+1. **Host prototype:** the shell runs as an ordinary application over an existing Linux desktop session. It does not replace that session or change the host login configuration.
+2. **VM Alpha:** the ArchISO live profile starts a dedicated Wayland session using labwc, then launches the NeruOS boot splash and desktop shell. labwc owns native windows, focus, decoration, window actions, and virtual desktops; NeruOS supplies the desktop UI and first-party utilities.
+
+NeruOS does not implement its own Wayland compositor. Keeping the compositor separate allows the project to focus on shell behavior without taking ownership of display-server responsibilities.
 
 ## Application catalog and launch
 
-The initial catalog is implemented in C++ with Qt's QAbstractListModel and GLib/GIO.
+The application catalog is implemented in C++ with Qt's QAbstractListModel and GLib/GIO.
 
-- GIO enumerates visible launchable desktop entries.
-- The model exposes display name, desktop ID, description, executable, and best-effort process status to QML.
-- Search filters the display-name role and launches a selected entry through g_app_info_launch().
+- GIO enumerates visible, launchable Linux desktop entries.
+- The model exposes display name, desktop ID, description, executable, and process-status information to QML.
+- Search launches a selected entry through GIO.
 - Dock aliases map common NeruOS app names to available Linux applications.
-- Process status is inferred by comparing distinct executable names with processes visible in /proc.
+- The current process indicator compares distinctive executable names with processes visible in /proc.
 
 The status model is intentionally conservative:
+
 - **Running** means a matching process name was found.
-- **Not detected** means the executable is trackable but no match was found; this does not prove no related window exists.
+- **Not detected** means the executable is trackable but no match was found; this does not prove that no related window exists.
 - **Unverified** means a generic launcher or duplicate executable prevents reliable matching.
 
-This is not native window tracking. D-Bus, sandbox, wrapper, helper, and forked applications can be missed. The selected compositor/window manager must provide real window identity and focus integration in a future milestone.
+This is not native-window tracking. D-Bus activation, sandboxing, wrappers, helper processes, and forked applications can make process matching incomplete. labwc manages native windows in VM Alpha, but the shell does not yet consume a native toplevel list or authoritative focused-window identity.
 
-## Important prototype boundary
+## Window and workspace operations
 
-The current shell prototype is a normal maximized Qt Quick application. It runs **on top of** an existing Linux desktop session and therefore still relies on the host's display server, compositor, and window manager.
+The VM Alpha profile configures labwc with four virtual desktops and common window actions. NeruOS sends selected workspace and window shortcuts through wtype. The action is therefore dependent on the active compositor's key bindings.
 
-It does not yet:
-- Replace KWin, Mutter, or another window manager / compositor.
-- Provide a login manager or an independent desktop session.
-- Manage native application windows, focus, workspaces, or multi-monitor layouts.
-- Own system notifications or hardware controls.
-- Provide an installer or bootable ISO.
+The next window-integration stage is to expose native window identity, title, focus, workspace, and state to the shell. Until that exists, dock indicators are process-based and NeruBar application context is not guaranteed to represent the true focused window.
 
-A later milestone must select a window-management / compositor foundation or another explicit strategy. A shell UI and a compositor are separate responsibilities; writing the UI does not automatically supply window management.
+## System services
 
-## UI technology
+The SystemControls layer talks to user-session services and hardware interfaces without running the shell as root:
 
-- Qt 6 / QML for shell components and first-party interface prototypes.
-- GLib/GIO for standard desktop application discovery and launch.
-- SVG for scalable marks and simple UI artwork.
-- C++ only where native services or integration genuinely require it.
-- Prefer desktop portals and documented session APIs over custom privileged daemons.
+- **Wi-Fi:** NetworkManager through nmcli, subject to polkit authorization.
+- **Audio:** PipeWire / WirePlumber through wpctl, with a pactl fallback.
+- **Bluetooth:** BlueZ through bluetoothctl with bounded command execution.
+- **Brightness:** writable nodes under /sys/class/backlight when exposed and permitted.
+- **Battery:** capacity and charging state under /sys/class/power_supply when exposed.
+- **Notifications:** freedesktop notification service on the session D-Bus.
+- **Session actions:** systemd-logind; screen locking uses swaylock with the VM Alpha PAM profile.
 
-## System integration boundaries
+Controls are unavailable when their service, device, or permission is missing. The shell does not elevate privileges to make a control appear usable. Desktop portal integration, shell crash recovery, and physical-device validation remain open work.
 
-Current NeruCenter toggles and sliders are local demo state. They do not change real Wi-Fi, Bluetooth, audio, brightness, power, or display settings.
+## First-party utilities
 
-A future implementation may connect to user-session services such as NetworkManager, PipeWire, and power management APIs. It should not run as root merely to display a settings panel.
+- **NeruFiles** uses a Qt file-system model for browsing and common file operations as the current user.
+- **NeruSettings** persists wallpaper, accent, appearance preference, and dock pins with QSettings.
+- **NeruSearch** discovers and launches visible Linux desktop entries through GIO.
+- **NeruCenter** displays system status and controls supported services.
+- **Notification Center** receives session notifications and keeps a bounded in-memory history.
+- **Session Panel** exposes lock, logout, suspend, restart, and power-off actions where permitted.
+- **NeruStore** remains planned; package sources, signature checks, and its trust model must be defined first.
+
+## Image, persistence, and updates
+
+The VM Alpha image is an ArchISO-based live system with UEFI GRUB and Legacy BIOS Syslinux boot paths. The supplied QEMU helpers use a diskless configuration and do not attach host block devices. The live root is temporary; changes made in the VM disappear at shutdown.
+
+The public v0.4.0-alpha2 prerelease is for VM testing only. It does not contain a persistent installer, account provisioning flow, signed NeruOS package repository, project update feed, upgrade transaction, or rollback implementation. Arch package status can be checked in the live session, but those updates are not persistent across VM reboots.
 
 ## Application compatibility
 
-1. **Linux-native applications** — preferred when available.
-2. **Windows compatibility layers or virtualization** — evaluated per application; a compatibility layer is not the same as a Windows kernel.
-3. **Native Windows boot** — remains the reliable fallback for software or games that require a supported Windows environment.
+1. **Linux-native applications** are preferred when available.
+2. **Windows compatibility layers or virtualization** are evaluated per application; a compatibility layer is not the same as a Windows kernel.
+3. **Native Windows boot** remains the reliable fallback for software or games that require a supported Windows environment.
 
-NeruOS will not impersonate Windows, tamper with anti-cheat systems, or attempt to bypass driver integrity checks.
+NeruOS will not impersonate Windows, tamper with anti-cheat systems, or attempt to bypass driver-integrity checks.
 
 ## Security principles
 
 - Keep the base system close to upstream Arch unless there is a clear reason to diverge.
-- Sign and verify project packages when a repository is introduced.
+- Sign and verify project packages when a NeruOS repository is introduced.
 - Do not execute downloaded scripts automatically.
 - Do not require privileged access for ordinary UI functions.
-- Document update, rollback, and recovery behavior before broad release.
+- Apply file operations as the logged-in user and report permission failures.
+- Document installation, update, rollback, and recovery behavior before a hardware release.

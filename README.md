@@ -18,6 +18,21 @@ The long-term direction is a **standalone NeruOS desktop shell**, not a KDE Plas
 
 > **Current status:** v0.4.0-alpha1 is a diskless x86_64 live ISO with UEFI (themed GRUB) and Legacy BIOS (Syslinux) boot paths. The latest image has booted through UEFI in QEMU and reached the full Nebula desktop. The Legacy BIOS path is included, but the current SeaBIOS/QEMU test did not reach the desktop and remains unverified. No installer is included, and the VM helpers do not attach host disks. NeruOS remains an early VM-only prototype and is not ready for installation on physical hardware.
 
+## Download VM Alpha
+
+The current VM-only ISO and its checksum are published in the [NeruOS v0.4.0-alpha1 GitHub Release](https://github.com/Nael12-kobo/NeruOS/releases/tag/v0.4.0-alpha1).
+
+- [Download the x86_64 ISO (843 MiB)](https://github.com/Nael12-kobo/NeruOS/releases/download/v0.4.0-alpha1/neruos-vm-alpha-0.4.0-alpha1-x86_64.iso)
+- [Download the SHA-256 checksum](https://github.com/Nael12-kobo/NeruOS/releases/download/v0.4.0-alpha1/neruos-vm-alpha-0.4.0-alpha1-x86_64.iso.sha256)
+
+Verify the downloaded ISO with:
+
+```bash
+sha256sum -c neruos-vm-alpha-0.4.0-alpha1-x86_64.iso.sha256
+```
+
+The ISO is for VM testing only. UEFI was verified to reach the desktop; Legacy BIOS remains unverified. There is no installer.
+
 ## Nebula design direction
 
 - **Appearance:** dark by default.

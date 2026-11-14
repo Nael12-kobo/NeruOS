@@ -9,7 +9,7 @@ This is the NeruOS Nebula shell UI prototype built with Qt Quick/QML. It is deve
 Install dependencies:
 
 ~~~bash
-sudo pacman -S --needed base-devel cmake ninja qt6-base qt6-declarative qt6-svg glib2
+sudo pacman -S --needed base-devel cmake ninja qt6-base qt6-declarative qt6-svg glib2 pacman-contrib
 ~~~
 
 Configure, compile, and run:
@@ -49,6 +49,14 @@ Or run ./build.sh from this directory.
 - Status buttons open NeruCenter.
 - Search opens from the top bar or with Alt+Space.
 
+### System Updates
+
+- Uses pacman-contrib's checkupdates command to compare installed packages with configured Arch repositories.
+- Lists package names and old/new versions.
+- Never installs packages or runs a privileged upgrade.
+- Does not yet check for a NeruOS project release; that will use a separate signed release channel.
+- In a live ISO, all writable changes disappear after shutdown.
+
 ### NeruSpace
 
 - Select General, Coding, Gaming, or Study.
@@ -74,6 +82,20 @@ Open NeruSearch immediately for UI testing:
 ./build/neruos-nebula --show-search
 ~~~
 
+Open the System Updates panel:
+
+~~~bash
+./build/neruos-nebula --show-updates
+~~~
+
+Run a terminal-only package update check:
+
+~~~bash
+./build/neruos-nebula --check-updates
+~~~
+
+Exit status is 0 when no updates are available, 10 when updates are available, and another non-zero value on error.
+
 Launch a known desktop entry and run a short process-detection check:
 
 ~~~bash
@@ -90,4 +112,4 @@ D-Bus-activated apps, sandbox wrappers, helper processes, and apps that fork may
 
 - NeruCenter values are local UI state and do not alter NetworkManager, Bluetooth, audio, brightness, or power settings.
 - Workspace selection changes the prototype's workspace label only; it is not yet connected to a compositor.
-- No independent login session, window manager, compositor, installer, or bootable ISO is provided.
+- No independent login session, window manager, compositor, or installer is provided. The UEFI VM Alpha ISO is still being built and has not been published yet.

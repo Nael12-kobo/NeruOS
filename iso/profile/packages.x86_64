@@ -1,0 +1,49 @@
+# Arch live image and UEFI boot
+base
+linux
+mkinitcpio
+mkinitcpio-archiso
+systemd
+pacman
+pacman-mirrorlist
+efibootmgr
+
+# NeruOS Qt Quick shell
+glib2
+qt6-base
+qt6-declarative
+qt6-svg
+qt6-wayland
+pacman-contrib
+
+# Wayland desktop session
+labwc
+wayland
+wayland-protocols
+xorg-xwayland
+mesa
+
+# Portals and session services
+xdg-desktop-portal
+xdg-desktop-portal-wlr
+xdg-desktop-portal-gtk
+networkmanager
+wpa_supplicant
+dbus
+polkit
+
+# Native apps for VM testing
+foot
+thunar
+mousepad
+firefox
+fastfetch
+nano
+
+# Fonts and icon theme
+adwaita-cursors
+adwaita-icon-theme
+noto-fonts
+noto-fonts-emoji
+ttf-dejavu
+ttf-liberation

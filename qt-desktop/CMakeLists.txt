@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
-project(NeruOSNebulaPrototype VERSION 0.3.0 LANGUAGES CXX)
+project(NeruOSNebulaPrototype VERSION 0.4.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -14,6 +14,8 @@ qt_add_executable(neruos-nebula
     main.cpp
     AppCatalog.cpp
     AppCatalog.h
+    UpdateChecker.cpp
+    UpdateChecker.h
 )
 
 qt_add_qml_module(neruos-nebula

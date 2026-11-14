@@ -1,0 +1,12 @@
+Welcome to NeruOS Nebula VM Alpha
+
+This is a temporary live environment for virtual-machine testing.
+No disk installer is included. Changes disappear when the VM is powered off.
+
+Shortcuts:
+  Super + Enter   Open recovery terminal
+  Alt + Tab       Switch application windows
+  Alt + F4        Close the focused window
+  Super + Q       Exit the NeruOS session
+
+NeruOS Project: https://github.com/Nael12-kobo/NeruOS

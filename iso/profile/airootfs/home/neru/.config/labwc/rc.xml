@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<labwc_config>
+  <core>
+    <decoration>server</decoration>
+  </core>
+  <keyboard>
+    <keybind key="W-Return">
+      <action name="Execute" command="foot"/>
+    </keybind>
+    <keybind key="W-e">
+      <action name="Execute" command="thunar"/>
+    </keybind>
+    <keybind key="A-F4">
+      <action name="Close"/>
+    </keybind>
+    <keybind key="A-Tab">
+      <action name="NextWindow"/>
+    </keybind>
+    <keybind key="W-q">
+      <action name="Exit"/>
+    </keybind>
+  </keyboard>
+</labwc_config>

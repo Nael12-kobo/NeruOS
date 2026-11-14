@@ -2,6 +2,17 @@
 
 All notable project changes will be recorded here.
 
+## v0.4.0-alpha1 — VM safety and update foundation
+
+- Added a UEFI-only ArchISO live profile for virtual-machine testing.
+- Designed the first image without an installer or host-disk attachment.
+- Added a non-root ArchISO build helper that keeps downloaded tools and build output inside the repository cache.
+- Added a diskless QEMU launch helper and VirtualBox testing instructions.
+- Added a recovery terminal shortcut and fallback terminal behavior.
+- Added a System Updates panel that reports Arch package updates without installing them.
+- Documented the distinction between Arch package updates and future signed NeruOS project releases.
+- Added VM Alpha safety, requirements, and testing documentation.
+
 ## v0.3.0 — Native application discovery prototype
 
 - Added a GIO-backed application catalog using visible Linux desktop entries.

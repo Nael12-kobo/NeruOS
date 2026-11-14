@@ -21,3 +21,9 @@ Makefile
 # OS noise
 .DS_Store
 Thumbs.db
+
+# Local ISO build cache, downloaded upstream tools, and large binary images
+/.cache/
+/tools/archiso/
+/dist/*.iso
+/dist/*.iso.sha256

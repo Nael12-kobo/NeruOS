@@ -1,4 +1,5 @@
 #include "AppCatalog.h"
+#include "UpdateChecker.h"
 
 #include <QDebug>
 #include <QGuiApplication>
@@ -15,6 +16,7 @@ int main(int argc, char *argv[])
     QGuiApplication::setOrganizationName(QStringLiteral("NeruOS"));
 
     AppCatalogModel appCatalog;
+    UpdateChecker updateChecker;
 
     if (app.arguments().contains(QStringLiteral("--list-apps"))) {
         qInfo().noquote() << QStringLiteral("NeruOS application catalog: %1 launchable desktop entries")
@@ -62,6 +64,22 @@ int main(int argc, char *argv[])
         return app.exec();
     }
 
+    const bool showSearch = app.arguments().contains(QStringLiteral("--show-search"));
+    const bool showUpdates = app.arguments().contains(QStringLiteral("--show-updates"));
+    const bool checkUpdates = app.arguments().contains(QStringLiteral("--check-updates"));
+
+    if (checkUpdates) {
+        QObject::connect(&updateChecker, &UpdateChecker::checkFinished,
+                         &app, [&app, &updateChecker](bool updatesAvailable, int count) {
+            qInfo().noquote() << updateChecker.message();
+            for (const QString &item : updateChecker.updates())
+                qInfo().noquote() << item;
+            app.exit(updatesAvailable ? 10 : 0);
+        });
+        updateChecker.checkNow();
+        return app.exec();
+    }
+
     QSortFilterProxyModel appFilter;
     appFilter.setSourceModel(&appCatalog);
     appFilter.setFilterRole(AppCatalogModel::DisplayNameRole);
@@ -72,6 +90,7 @@ int main(int argc, char *argv[])
     QQmlApplicationEngine engine;
     engine.rootContext()->setContextProperty(QStringLiteral("appCatalog"), &appCatalog);
     engine.rootContext()->setContextProperty(QStringLiteral("appFilter"), &appFilter);
+    engine.rootContext()->setContextProperty(QStringLiteral("updateChecker"), &updateChecker);
 
     const QUrl mainUrl(QStringLiteral("qrc:/qt/qml/NeruOS/Main.qml"));
 
@@ -87,9 +106,14 @@ int main(int argc, char *argv[])
     );
 
     engine.load(mainUrl);
-    if (app.arguments().contains(QStringLiteral("--show-search")) &&
-        !engine.rootObjects().isEmpty()) {
-        engine.rootObjects().first()->setProperty("searchOpen", true);
+    if (!engine.rootObjects().isEmpty()) {
+        if (showSearch)
+            engine.rootObjects().first()->setProperty("searchOpen", true);
+        if (showUpdates) {
+            engine.rootObjects().first()->setProperty("updatePanelOpen", true);
+            QTimer::singleShot(0, &updateChecker, &UpdateChecker::checkNow);
+        }
     }
+
     return app.exec();
 }

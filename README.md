@@ -16,7 +16,7 @@
 
 The long-term direction is a **standalone NeruOS desktop shell**, not a KDE Plasma theme. The current work is a Qt Quick/QML shell prototype that runs as a normal maximized application on top of an existing Linux desktop session. It does not yet replace the window manager, compositor, login session, or desktop environment.
 
-> **Current status:** standalone shell prototype v0.3. NeruOS is not yet a bootable distribution, does not provide an installation ISO, and should not be installed as a daily-driver operating system.
+> **Current status:** v0.4.0-alpha1 VM ISO build in progress. The planned first image is a UEFI-only live environment for VirtualBox / QEMU, with no installer and no host-disk access. It must pass a VM boot test before an ISO download is published. NeruOS is not ready for installation on physical hardware.
 
 ## Nebula design direction
 
@@ -30,9 +30,9 @@ The long-term direction is a **standalone NeruOS desktop shell**, not a KDE Plas
 
 See the [Nebula Design System](docs/DESIGN-SYSTEM.md) and [Branding Guide](docs/BRANDING.md).
 
-## Current v0.3 prototype
+## Current v0.4.0-alpha1 development
 
-| Component | v0.3 status |
+| Component | v0.4.0-alpha1 status |
 |---|---|
 | **NeruBar** | Dynamic menu groups and clickable prototype actions |
 | **NeruDock** | Pointer magnification, tooltips, app aliases, and launch requests |
@@ -42,6 +42,8 @@ See the [Nebula Design System](docs/DESIGN-SYSTEM.md) and [Branding Guide](docs/
 | **NeruSpace** | General, Coding, Gaming, and Study labels; not yet connected to a compositor |
 | **Navigation Rail** | Hidden by default; revealed from the left edge |
 | **Wallpaper** | User can choose an image for the current prototype session |
+| **System Updates** | Reads available Arch package updates without installing them; NeruOS project releases need a separate future update channel |
+| **VM Alpha** | UEFI live ISO profile and diskless QEMU / VirtualBox test path are being prepared |
 
 **Process status is a best-effort indicator, not a window manager's active-window state.** Apps that launch through helper processes, D-Bus activation, sandboxes, or wrappers may not match the desktop entry executable. Multiple entries using the same executable may share a process status.
 
@@ -121,14 +123,16 @@ To launch a known desktop entry and run a short process-detection check:
 
 The prototype is a normal maximized application window. Close it like any other application. It does not install a shell, change your Plasma / GNOME configuration, or modify your bootloader.
 
-See [Prototype Installation](docs/INSTALLATION.md), [Application Discovery and Launch](docs/APPLICATION-LAUNCHING.md), and [Desktop Shell Architecture](docs/DESKTOP-SHELL.md).
+See [Prototype Installation](docs/INSTALLATION.md), [Application Discovery and Launch](docs/APPLICATION-LAUNCHING.md), [Desktop Shell Architecture](docs/DESKTOP-SHELL.md), [VM Alpha Safety and Testing](docs/VM-ALPHA.md), and [Update Strategy](docs/UPDATE-STRATEGY.md).
 
 ## Repository map
 
 ~~~text
 NeruOS/
 ├── assets/                 # Logo and brand assets
-├── docs/                   # Project, design, architecture, and install docs
+├── docs/                   # Project, design, architecture, VM, and update docs
+├── iso/profile/            # UEFI live ISO profile for VM Alpha
+├── scripts/                # Rootless ISO build and diskless VM launch helpers
 ├── qt-desktop/
 │   ├── AppCatalog.h/.cpp   # GIO app discovery, launch, process status
 │   ├── Main.qml            # Shell composition
@@ -150,8 +154,9 @@ NeruOS/
 4. **System services** — real NeruCenter controls, notifications, and session integration.
 5. **Desktop session engineering** — compositor/window-manager strategy, login session, crash recovery, and multi-monitor behavior.
 6. **First-party utilities** — NeruSettings, NeruFiles, and NeruStore.
-7. **System image** — reproducible Arch-based image, installer, updates, rollback, and recovery.
-8. **Alpha ISO** — only after installation, recovery, and upgrade paths are tested.
+7. **VM Alpha ISO** — build a UEFI live image with no installer or writable host-disk access, then validate it in VirtualBox / QEMU.
+8. **Persistent system engineering** — installer, signed NeruOS package repository, project release feed, upgrade, rollback, and recovery.
+9. **Hardware Alpha** — only after VM installation, update, and recovery paths are tested.
 
 Read the [full roadmap](docs/ROADMAP.md). Planned features are not released features.
 

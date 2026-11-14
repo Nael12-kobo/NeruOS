@@ -14,12 +14,15 @@ Rectangle {
     property string workspaceName: "General"
     property string clockText: ""
     property string dateText: ""
+    property int updateCount: 0
+    property string updateState: "idle"
     property string activeMenu: ""
     property real menuAnchorX: 24
     property var menuOptions: []
 
     signal searchRequested()
     signal centerRequested()
+    signal updateCheckRequested()
     signal menuActionRequested(string action)
 
     function contextName() {
@@ -142,6 +145,25 @@ Rectangle {
             font.pixelSize: 10
             font.weight: Font.DemiBold
             visible: root.width > 1040
+        }
+
+        ToolButton {
+            id: updateButton
+            text: root.updateState === "checking" ? "…" : "↻"
+            onClicked: root.updateCheckRequested()
+            ToolTip.text: root.updateCount > 0
+                          ? root.updateCount + " update(s) available"
+                          : "Check system updates"
+            ToolTip.visible: hovered
+            contentItem: Text {
+                text: updateButton.text
+                color: root.updateCount > 0 ? "#9DE5BD" : "#AAB6D0"
+                font.pixelSize: 16
+                font.bold: root.updateCount > 0
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+            }
+            background: Rectangle { radius: 8; color: parent.hovered ? "#40506E91" : "transparent" }
         }
 
         ToolButton {

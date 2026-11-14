@@ -21,6 +21,7 @@ ApplicationWindow {
     property bool searchOpen: false
     property bool railVisible: false
     property bool aboutOpen: false
+    property bool updatePanelOpen: false
     property string aboutHeading: "About NeruOS"
     property url customWallpaper: ""
     property date currentTime: new Date()
@@ -60,6 +61,7 @@ ApplicationWindow {
         searchOpen = false
         centerOpen = false
         aboutOpen = false
+        updatePanelOpen = false
         railVisible = false
     }
 
@@ -67,6 +69,7 @@ ApplicationWindow {
         centerOpen = false
         searchOpen = false
         aboutOpen = false
+        updatePanelOpen = false
         activeApp = ""
     }
 
@@ -139,6 +142,23 @@ ApplicationWindow {
         onTriggered: root.notificationText = ""
     }
 
+    Timer {
+        id: initialUpdateCheck
+        interval: 45000
+        repeat: false
+        running: true
+        onTriggered: updateChecker.checkNow()
+    }
+
+    Connections {
+        target: updateChecker
+
+        function onCheckFinished(updatesAvailable, count) {
+            if (updatesAvailable)
+                root.showNotification(updateChecker.message)
+        }
+    }
+
     Connections {
         target: appCatalog
 
@@ -195,11 +215,21 @@ ApplicationWindow {
         appName: root.activeApp
         workspaceName: root.activeWorkspace
         clockText: Qt.formatDateTime(root.currentTime, "ddd, dd MMM  hh:mm")
+        updateCount: updateChecker.updateCount
+        updateState: updateChecker.state
         onSearchRequested: root.openApp("NeruSearch")
+        onUpdateCheckRequested: {
+            root.updatePanelOpen = true
+            root.centerOpen = false
+            root.searchOpen = false
+            root.aboutOpen = false
+            updateChecker.checkNow()
+        }
         onCenterRequested: {
             root.centerOpen = !root.centerOpen
             root.searchOpen = false
             root.aboutOpen = false
+            root.updatePanelOpen = false
         }
         onMenuActionRequested: function(action) {
             root.handleMenuAction(action)
@@ -907,6 +937,154 @@ ApplicationWindow {
                         font.pixelSize: 10
                     }
                 }
+            }
+        }
+    }
+
+    Rectangle {
+        id: updatePanel
+        width: Math.min(500, root.width - 36)
+        height: Math.min(500, root.height - 150)
+        anchors.right: parent.right
+        anchors.top: topBar.bottom
+        anchors.rightMargin: 18
+        anchors.topMargin: 18
+        radius: 22
+        color: "#F00D172B"
+        border.color: "#8295B9D5"
+        visible: root.updatePanelOpen
+        z: 68
+
+        ColumnLayout {
+            anchors.fill: parent
+            anchors.margins: 19
+            spacing: 12
+
+            RowLayout {
+                Layout.fillWidth: true
+                Text {
+                    text: "System Updates"
+                    color: root.primaryText
+                    font.pixelSize: 19
+                    font.bold: true
+                }
+                Item { Layout.fillWidth: true }
+                ToolButton {
+                    text: "×"
+                    onClicked: root.updatePanelOpen = false
+                }
+            }
+
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 76
+                radius: 13
+                color: updateChecker.state === "updates" ? "#35324B4A"
+                     : updateChecker.state === "error" || updateChecker.state === "unavailable" ? "#3D4B3542"
+                     : "#26364F"
+                Column {
+                    anchors.fill: parent
+                    anchors.margins: 12
+                    spacing: 5
+                    Text {
+                        text: updateChecker.state === "checking" ? "Checking…"
+                              : updateChecker.state === "updates" ? updateChecker.updateCount + " updates available"
+                              : updateChecker.state === "current" ? "You're up to date"
+                              : updateChecker.state === "error" ? "Could not check updates"
+                              : updateChecker.state === "unavailable" ? "Update checker unavailable"
+                              : "System update status"
+                        color: root.primaryText
+                        font.pixelSize: 13
+                        font.bold: true
+                    }
+                    Text {
+                        text: updateChecker.message
+                        color: root.secondaryText
+                        font.pixelSize: 10
+                        wrapMode: Text.WordWrap
+                        width: parent.width
+                    }
+                }
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+                Text {
+                    text: "PACKAGE"
+                    color: root.secondaryText
+                    font.pixelSize: 9
+                    font.bold: true
+                    font.letterSpacing: 1
+                }
+                Item { Layout.fillWidth: true }
+                Text {
+                    text: "VERSION"
+                    color: root.secondaryText
+                    font.pixelSize: 9
+                    font.bold: true
+                    font.letterSpacing: 1
+                }
+            }
+
+            ListView {
+                id: updateList
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                clip: true
+                spacing: 3
+                model: updateChecker.updates
+                ScrollBar.vertical: ScrollBar {}
+                delegate: Rectangle {
+                    required property string modelData
+                    width: updateList.width
+                    height: 32
+                    radius: 8
+                    color: "#54233350"
+                    Text {
+                        anchors.fill: parent
+                        anchors.leftMargin: 10
+                        anchors.rightMargin: 10
+                        verticalAlignment: Text.AlignVCenter
+                        text: modelData
+                        color: "#DCE6FA"
+                        font.pixelSize: 9
+                        elide: Text.ElideRight
+                    }
+                }
+                Label {
+                    anchors.centerIn: parent
+                    visible: updateList.count === 0
+                    text: updateChecker.state === "checking"
+                          ? "Contacting package mirrors…"
+                          : "No update list to display."
+                    color: root.secondaryText
+                    font.pixelSize: 11
+                }
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+                Button {
+                    text: updateChecker.checking ? "Checking…" : "Check again"
+                    enabled: !updateChecker.checking
+                    onClicked: updateChecker.checkNow()
+                }
+                Item { Layout.fillWidth: true }
+                Text {
+                    text: updateChecker.lastChecked.length
+                          ? "Checked " + updateChecker.lastChecked
+                          : "Not checked yet"
+                    color: "#7183A4"
+                    font.pixelSize: 8
+                }
+            }
+
+            Text {
+                Layout.fillWidth: true
+                text: "This only checks package versions; it never installs updates. The VM Alpha is a live session: changes made inside it are temporary and disappear after shutdown. A persistent NeruOS update channel and installer will come later."
+                color: "#93A3C1"
+                font.pixelSize: 9
+                wrapMode: Text.WordWrap
             }
         }
     }

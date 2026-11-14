@@ -1,0 +1,10 @@
+#!/bin/sh
+
+# Start NeruOS as the primary shell application.
+# If it exits or fails to start, keep the Wayland session available and
+# open a terminal so the live user can inspect logs or restart the shell.
+/usr/local/bin/neruos-shell &
+shell_pid=$!
+wait "$shell_pid"
+
+foot --title="NeruOS Recovery Terminal"

@@ -11,7 +11,7 @@ Do not run prototype code with sudo.
 ## Dependencies
 
 ~~~bash
-sudo pacman -S --needed base-devel cmake ninja qt6-base qt6-declarative qt6-svg glib2
+sudo pacman -S --needed base-devel cmake ninja qt6-base qt6-declarative qt6-svg glib2 pacman-contrib
 ~~~
 
 Qt 6.5 or newer and GLib/GIO 2.0 development files are required.

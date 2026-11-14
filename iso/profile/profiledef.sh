@@ -6,7 +6,7 @@ iso_name="neruos-vm-alpha"
 iso_label="NERUOS_$(date +%Y%m)"
 iso_publisher="NeruOS Project"
 iso_application="NeruOS Nebula VM Alpha Live"
-iso_version="0.4.0-alpha1"
+iso_version="0.4.0-alpha2"
 # Keep systemd-firstboot from opening an interactive root-password prompt on tty1.
 # The live image provisions its own user and machine ID; no firstboot wizard is needed.
 # Keep early boot quiet; the native NeruOS Boot Animation takes over

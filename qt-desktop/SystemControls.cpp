@@ -158,7 +158,7 @@ void SystemControls::refreshBluetooth()
         return;
 
     m_bluetoothOperation = QStringLiteral("query");
-    m_bluetoothProcess.start(m_bluetoothctlPath, {QStringLiteral("show")});
+    m_bluetoothProcess.start(m_bluetoothctlPath, {QStringLiteral("--timeout"), QStringLiteral("3"), QStringLiteral("show")});
 }
 
 void SystemControls::refreshBattery()
@@ -300,7 +300,7 @@ void SystemControls::toggleBluetooth()
                                                : QStringLiteral("on");
     emit stateChanged();
     m_bluetoothProcess.start(m_bluetoothctlPath,
-                             {QStringLiteral("power"), target});
+                             {QStringLiteral("--timeout"), QStringLiteral("3"), QStringLiteral("power"), target});
 }
 
 void SystemControls::setBrightness(int percent)

@@ -54,7 +54,7 @@ QStringList NotificationAdaptor::GetServerInformation() const
     return {
         QStringLiteral("NeruOS"),
         QStringLiteral("NeruOS Project"),
-        QStringLiteral("0.4.0-alpha1"),
+        QStringLiteral("0.4.0-alpha2"),
         QStringLiteral("1.2")
     };
 }

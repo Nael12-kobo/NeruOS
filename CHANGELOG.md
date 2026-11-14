@@ -2,6 +2,15 @@
 
 All notable project changes will be recorded here.
 
+## v0.4.0-alpha2 — Bluetooth process stability and BIOS smoke test
+
+- Bounded `bluetoothctl` query and power commands with BlueZ non-interactive timeouts so the quick settings panel does not stay stuck in Updating.
+- Verified Bluetooth status falls back to “No controller detected” when the VM has no Bluetooth controller.
+- Rebuilt the diskless live ISO with the updated Nebula shell and alpha2 version metadata.
+- Booted the alpha2 ISO to the full Nebula desktop in GNOME Boxes using its BIOS VM configuration.
+- Revalidated the shell build, QML lint, ISO checksum, and desktop navigation in the live VM.
+
+
 ## v0.4.0-alpha1 — VM safety and update foundation
 
 - Added a UEFI-only ArchISO live profile for virtual-machine testing.

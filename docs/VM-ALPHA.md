@@ -65,7 +65,7 @@ It does not call sudo. If unprivileged user namespaces are disabled, the script 
 Or pass an explicit ISO path:
 
 ~~~bash
-./scripts/run-vm-alpha.sh dist/neruos-vm-alpha-0.4.0-alpha1-x86_64.iso
+./scripts/run-vm-alpha.sh dist/neruos-vm-alpha-0.4.0-alpha2-x86_64.iso
 ~~~
 
 To test the Legacy BIOS / Syslinux path:
@@ -137,3 +137,20 @@ The following remain hardware- or path-specific and should be tested separately:
 - [ ] Lock, logout, suspend, restart, and power-off on an installed persistent system.
 
 A successful build is not considered a complete hardware release until this checklist has been run on the target devices.
+
+## v0.4.0-alpha2 release smoke test
+
+The alpha2 ISO includes bounded BlueZ `bluetoothctl` process execution for the Control Center. It was booted in GNOME Boxes with the BIOS VM configuration and reached the full Nebula desktop.
+
+Verified during this run:
+- [x] Legacy BIOS / Syslinux boot reaches the full Nebula desktop in GNOME Boxes.
+- [x] NeruFiles opens from the dock and renders the live home directory.
+- [x] NeruSettings opens and its Appearance, Dock, System, and Session tabs render.
+- [x] Workspace switching between General and Coding works and posts a notification.
+- [x] Notification Center opens and displays the session notifications.
+- [x] Control Center opens; Wi-Fi and audio status are reported.
+- [x] Bluetooth query exits instead of remaining stuck; the VM correctly reports “No controller detected” when no virtual controller is present.
+- [x] Brightness and battery are reported unavailable when the virtual machine exposes no such hardware.
+- [x] VM remains diskless; the ISO is attached read-only and no host disk is attached.
+
+The Bluetooth controller itself, physical brightness/battery devices, and hardware power actions still require testing on a real device.

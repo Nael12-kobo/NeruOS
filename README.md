@@ -16,22 +16,21 @@
 
 The long-term direction is a **standalone NeruOS desktop shell**, not a KDE Plasma theme. The VM Alpha image now starts its own Wayland session with labwc and launches the native Qt 6 / C++ / QML Nebula shell. labwc manages native windows and virtual desktops; NeruOS provides the desktop UI, dock, quick settings, notifications, app search, file manager, settings, and session panel.
 
-> **Current status:** v0.4.0-alpha1 is a diskless x86_64 live ISO with UEFI (themed GRUB) and Legacy BIOS (Syslinux) boot paths. The latest image has booted through UEFI in QEMU and reached the full Nebula desktop. The Legacy BIOS path is included, but the current SeaBIOS/QEMU test did not reach the desktop and remains unverified. No installer is included, and the VM helpers do not attach host disks. NeruOS remains an early VM-only prototype and is not ready for installation on physical hardware.
+> **Current status:** v0.4.0-alpha2 is a diskless x86_64 live ISO with themed UEFI GRUB and Legacy BIOS Syslinux boot paths. UEFI previously reached the full Nebula desktop in QEMU; the alpha2 build has now also booted to the full desktop in GNOME Boxes using its BIOS virtual machine. No installer is included, and VM helpers do not attach host disks. NeruOS remains an early VM-only prototype and is not ready for installation on physical hardware.
 
 ## Download VM Alpha
 
-The current VM-only ISO and its checksum are published in the [NeruOS v0.4.0-alpha1 GitHub Release](https://github.com/Nael12-kobo/NeruOS/releases/tag/v0.4.0-alpha1).
+The current VM-only ISO and its checksum are published in the [NeruOS v0.4.0-alpha2 GitHub Release](https://github.com/Nael12-kobo/NeruOS/releases/tag/v0.4.0-alpha2).
 
-- [Download the x86_64 ISO (843 MiB)](https://github.com/Nael12-kobo/NeruOS/releases/download/v0.4.0-alpha1/neruos-vm-alpha-0.4.0-alpha1-x86_64.iso)
-- [Download the SHA-256 checksum](https://github.com/Nael12-kobo/NeruOS/releases/download/v0.4.0-alpha1/neruos-vm-alpha-0.4.0-alpha1-x86_64.iso.sha256)
+- [Download the x86_64 ISO (843 MiB)](https://github.com/Nael12-kobo/NeruOS/releases/download/v0.4.0-alpha2/neruos-vm-alpha-0.4.0-alpha2-x86_64.iso)
+- [Download the SHA-256 checksum](https://github.com/Nael12-kobo/NeruOS/releases/download/v0.4.0-alpha2/neruos-vm-alpha-0.4.0-alpha2-x86_64.iso.sha256)
 
-Verify the downloaded ISO with:
+The ISO is for VM testing only. UEFI and Legacy BIOS boot paths have both been exercised; the alpha2 BIOS smoke test used GNOME Boxes. There is no installer.
 
 ```bash
-sha256sum -c neruos-vm-alpha-0.4.0-alpha1-x86_64.iso.sha256
+sha256sum -c neruos-vm-alpha-0.4.0-alpha2-x86_64.iso.sha256
 ```
 
-The ISO is for VM testing only. UEFI was verified to reach the desktop; Legacy BIOS remains unverified. There is no installer.
 
 ## Nebula design direction
 
@@ -45,15 +44,15 @@ The ISO is for VM testing only. UEFI was verified to reach the desktop; Legacy B
 
 See the [Nebula Design System](docs/DESIGN-SYSTEM.md) and [Branding Guide](docs/BRANDING.md).
 
-## Current v0.4.0-alpha1 development
+## Current v0.4.0-alpha2 development
 
-| Component | v0.4.0-alpha1 status |
+| Component | v0.4.0-alpha2 status |
 |---|---|
 | **NeruBar** | Native menu bar, workspace label, clock, system status, and actions |
 | **Window management** | labwc manages native windows, focus, minimize/maximize, snap, close, and window switching |
 | **NeruDock** | Individual PNG app icons, hover magnification, launch aliases, and running indicators |
 | **NeruSearch** | Discovers and launches installed Linux desktop applications through GIO |
-| **NeruCenter** | NetworkManager Wi-Fi, PipeWire/WirePlumber audio, BlueZ Bluetooth, brightness, and battery status where hardware is available |
+| **NeruCenter** | NetworkManager Wi-Fi, PipeWire/WirePlumber audio, BlueZ Bluetooth with bounded command execution, brightness, and battery status where hardware is available |
 | **Notification Center** | Receives freedesktop notifications through the session D-Bus and keeps recent session history |
 | **NeruSpace** | Four real labwc virtual desktops: General, Coding, Gaming, and Study |
 | **NeruFiles** | Native file manager with navigation, file operations, trash, and hidden-file visibility |

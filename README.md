@@ -10,7 +10,6 @@
   </p>
 </div>
 
-![NeruOS Nebula desktop concept](assets/desktop-mockup.svg)
 
 # NeruOS — Nebula Edition
 

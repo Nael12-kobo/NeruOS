@@ -7,6 +7,8 @@ systemd
 pacman
 pacman-mirrorlist
 efibootmgr
+grub
+syslinux
 
 # NeruOS Qt Quick shell
 glib2
@@ -23,6 +25,16 @@ wayland
 wayland-protocols
 xorg-xwayland
 mesa
+wtype
+swaylock
+bluez
+bluez-utils
+
+# Optional graphical login manager for persistent installations
+greetd
+greetd-regreet
+cage
+accountsservice
 
 # Portals and session services
 xdg-desktop-portal
@@ -30,6 +42,11 @@ xdg-desktop-portal-wlr
 xdg-desktop-portal-gtk
 networkmanager
 wpa_supplicant
+pipewire
+pipewire-alsa
+pipewire-pulse
+wireplumber
+alsa-utils
 dbus
 polkit
 

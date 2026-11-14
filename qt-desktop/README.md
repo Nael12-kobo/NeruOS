@@ -82,6 +82,18 @@ Open NeruSearch immediately for UI testing:
 ./build/neruos-nebula --show-search
 ~~~
 
+Open the Control Center for UI testing:
+
+~~~bash
+./build/neruos-nebula --show-center
+~~~
+
+Test the freedesktop notification service on an existing session bus:
+
+~~~bash
+./build/neruos-nebula --test-notifications
+~~~
+
 Open the System Updates panel:
 
 ~~~bash
@@ -113,3 +125,93 @@ D-Bus-activated apps, sandbox wrappers, helper processes, and apps that fork may
 - NeruCenter values are local UI state and do not alter NetworkManager, Bluetooth, audio, brightness, or power settings.
 - Workspace selection changes the prototype's workspace label only; it is not yet connected to a compositor.
 - No independent login session, window manager, compositor, or installer is provided. The UEFI VM Alpha ISO is still being built and has not been published yet.
+
+## Nebula desktop visual shell
+
+The desktop layout now uses a separate PNG wallpaper, the standalone NeruOS logo,
+and individual transparent-corner PNG application icons from
+`assets/icons/`. The supplied 512 × 512 icons are kept as individual files;
+the QML dock references them by resource path.
+
+### Visual components
+
+- `DesktopBackground.qml` renders the wallpaper independently of the shell controls.
+- `WallpaperManager.qml` owns the default and session-selected wallpaper.
+- `DesktopLogo.qml` renders the standalone logo mark in NeruBar.
+- `ApplicationDock.qml` and `DockItem.qml` render the floating dock and its
+  individual application icons.
+- `NeruBar.qml` renders the macOS-inspired top menu bar and status controls.
+
+### Adding or replacing dock icons
+
+Edit the `dockApps` array in `Main.qml`. Each entry uses its own PNG resource:
+
+```qml
+{ name: "NeruFiles", icon: "qrc:/assets/icons/files.png" }
+```
+
+Place additional PNG files in `assets/icons/`; CMake discovers them on the
+next configure/build. Keep the file names and resource paths in the dock
+configuration in sync.
+
+## Control Center service integration
+
+- Wi-Fi reads and toggles the NetworkManager radio through `nmcli`, without
+  using sudo. It requires NetworkManager to be active and the session user to
+  be authorized by polkit.
+- Volume reads and updates the current output through `wpctl`, with `pactl`
+  as a fallback when available. It requires an active PipeWire/WirePlumber or
+  PulseAudio user session and a default output device.
+- Brightness reads `/sys/class/backlight` and only enables the slider when
+  the current user already has write access to the backlight device. NeruOS
+  does not change system permissions or request elevated privileges.
+- Bluetooth reads and toggles the BlueZ controller through `bluetoothctl`.
+  The VM can still report no controller when QEMU or the host does not expose
+  a Bluetooth adapter.
+- Battery status is read from `/sys/class/power_supply` and remains hidden or
+  unavailable on systems that do not expose a battery device.
+
+The service layer refreshes hardware/session state periodically and disables
+controls whose dependencies are missing. No packages are installed by the
+desktop shell and no privileged commands are run.
+
+## Login and session management
+
+The session panel uses `systemd-logind` for logout, suspend, reboot, and
+power-off, and starts the PAM-backed `swaylock` screen locker. The ISO now
+includes a `swaylock` PAM policy that delegates authentication to
+`system-auth`.
+
+For a persistent installation, the ISO also packages `greetd`,
+`greetd-regreet`, and `cage`, with a reference profile at
+`/etc/greetd/config.toml.template`. It is deliberately not enabled in the
+temporary VM Alpha live image: that image still auto-logs in as its disposable
+live user and does not provision a real password-bearing account or a
+dedicated greeter account. The graphical greeter must be enabled only after
+the installed system provisions those accounts and the administrator chooses
+to switch from live autologin to greetd.
+
+## NeruOS Boot Animation
+
+The session autostart launches `neruos-shell --boot-splash` before the full
+desktop shell. This lightweight Qt Quick startup window appears as soon as
+labwc is ready, without waiting for GIO application discovery or update checks.
+It is fullscreen and frameless, displays the N logo with a `NeruOS` wordmark,
+and fades away to reveal the desktop running behind it.
+
+`BootAnimation.qml` recreates the supplied logo animation as native Qt Quick
+Shapes: the N-shaped stroke draws in, pulses gently, and is accompanied by two
+expanding ripples and three animated loading dots. The splash runs for about
+five seconds and writes diagnostics to `~/.local/state/neruos-boot.log`.
+
+The defaults are configured in the `BootAnimation` instance in
+`BootSplash.qml`:
+
+- `animationMode: "draw"` plays the logo-drawing loop. Set it to
+  `"continuous"` to use the moving dash mode.
+- `speedMultiplier` adjusts animation speed.
+- `rippleEnabled` toggles the expanding rings.
+- `loadingDotsEnabled` toggles the three loading dots.
+
+This animation runs after the Wayland session and Qt shell have started. It is
+not a firmware/UEFI splash and does not replace the Linux kernel boot screen.

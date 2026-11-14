@@ -1,12 +1,18 @@
 #!/bin/sh
+set -u
 
-# Keep per-user logs available in the live session for VM diagnostics.
+# Keep per-user logs available for startup diagnostics.
 mkdir -p "$HOME/.local/state"
 
-# Start NeruOS with Qt Quick software rendering for broad VM compatibility.
-/usr/local/bin/neruos-shell >"$HOME/.local/state/neruos-shell.log" 2>&1 &
-shell_pid=$!
-wait "$shell_pid"
+# Show the lightweight NeruOS logo animation first. Run it in the foreground
+# so the full-screen desktop cannot cover the splash before it is seen.
+/usr/local/bin/neruos-shell --boot-splash >>"$HOME/.local/state/neruos-boot.log" 2>&1
+splash_status=$?
 
-# Preserve a usable session if the shell exits or fails to render.
-exec foot --title="NeruOS Recovery Terminal"
+if [ "$splash_status" -ne 0 ]; then
+    printf 'NeruOS Boot Animation exited with status %s\n' "$splash_status" \
+        >>"$HOME/.local/state/neruos-boot.log"
+fi
+
+# Reveal the desktop after the boot animation completes.
+exec /usr/local/bin/neruos-shell >>"$HOME/.local/state/neruos-shell.log" 2>&1

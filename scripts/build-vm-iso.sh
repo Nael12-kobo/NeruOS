@@ -20,6 +20,12 @@ if [[ ! -f "$PROFILE/profiledef.sh" ]]; then
     exit 1
 fi
 
+if ! command -v grub-mkstandalone >/dev/null 2>&1; then
+    printf 'GRUB UEFI image creation requires grub-mkstandalone on the build host.\n' >&2
+    printf 'The build script will not install host packages or use sudo.\n' >&2
+    exit 1
+fi
+
 if ! command -v unshare >/dev/null 2>&1 || ! unshare --user --map-root-user true 2>/dev/null; then
     printf 'This build requires unprivileged user namespaces (unshare --user --map-root-user).\n' >&2
     printf 'No sudo/root build is attempted by this script.\n' >&2
@@ -41,7 +47,10 @@ cmake -S "$ROOT/qt-desktop" -B "$APP_BUILD" -G Ninja
 cmake --build "$APP_BUILD"
 qmllint "$ROOT/qt-desktop/Main.qml" \
         "$ROOT/qt-desktop/NeruBar.qml" \
-        "$ROOT/qt-desktop/NeruDock.qml"
+        "$ROOT/qt-desktop/NeruDock.qml" \
+        "$ROOT/qt-desktop/GlassPanel.qml" \
+        "$ROOT/qt-desktop/BootAnimation.qml" \
+        "$ROOT/qt-desktop/BootSplash.qml"
 
 # Make a disposable copy of the ISO profile so the committed profile remains
 # portable. The cache path is rewritten only in this build copy.
@@ -53,7 +62,7 @@ sed "s|^CacheDir = .*|CacheDir = $ROOT/.cache/pacman-cache|" \
 install -D -m 0755 "$APP_BUILD/neruos-nebula" \
     "$BUILD_PROFILE/airootfs/usr/local/bin/neruos-shell"
 
-printf '\nBuilding the lightweight UEFI live ISO (non-root user namespace)...\n'
+printf '\nBuilding the NeruOS live ISO (UEFI GRUB + Legacy BIOS Syslinux; non-root user namespace)...\n'
 "$ARCHISO_SOURCE/archiso/mkarchiso" \
     -v \
     -w "$WORK" \

@@ -2,22 +2,169 @@
 <labwc_config>
   <core>
     <decoration>server</decoration>
+    <gap>0</gap>
+    <adaptiveSync>no</adaptiveSync>
+    <allowTearing>no</allowTearing>
   </core>
+
+  <placement>
+    <policy>cascade</policy>
+    <cascadeOffset x="34" y="28"/>
+  </placement>
+
+  <theme>
+    <fallbackAppIcon>labwc</fallbackAppIcon>
+    <titlebar>
+      <layout>icon:desk,iconify,max,close</layout>
+      <showTitle>yes</showTitle>
+    </titlebar>
+    <cornerRadius>10</cornerRadius>
+    <keepBorder>yes</keepBorder>
+    <maximizedDecoration>titlebar</maximizedDecoration>
+    <dropShadows>yes</dropShadows>
+    <font place="ActiveWindow">
+      <name>sans</name>
+      <size>10</size>
+      <weight>medium</weight>
+    </font>
+    <font place="InactiveWindow">
+      <name>sans</name>
+      <size>10</size>
+      <weight>normal</weight>
+    </font>
+  </theme>
+
+  <windowSwitcher preview="yes" outlines="yes" unshade="yes">
+    <osd show="yes" style="classic" output="all" thumbnailLabelFormat="%T"/>
+    <fields>
+      <field content="icon" width="8%"/>
+      <field content="desktop_entry_name" width="34%"/>
+      <field content="title" width="58%"/>
+    </fields>
+  </windowSwitcher>
+
+  <desktops>
+    <popupTime>750</popupTime>
+    <names>
+      <name>General</name>
+      <name>Coding</name>
+      <name>Gaming</name>
+      <name>Study</name>
+    </names>
+  </desktops>
+
+  <!-- Keep the NeruOS desktop shell on every virtual desktop. -->
+  <windowRules>
+    <windowRule title="NeruOS">
+      <action name="ToggleOmnipresent"/>
+    </windowRule>
+  </windowRules>
+
+  <snapping>
+    <range inner="12" outer="12"/>
+    <cornerRange>48</cornerRange>
+    <overlay enabled="yes">
+      <delay inner="250" outer="350"/>
+    </overlay>
+    <topMaximize>yes</topMaximize>
+    <notifyClient>always</notifyClient>
+  </snapping>
+
   <keyboard>
     <keybind key="W-Return">
       <action name="Execute" command="foot"/>
     </keybind>
     <keybind key="W-e">
-      <action name="Execute" command="thunar"/>
-    </keybind>
-    <keybind key="A-F4">
-      <action name="Close"/>
+      <action name="Execute" command="neruos-shell --show-files"/>
     </keybind>
     <keybind key="A-Tab">
       <action name="NextWindow"/>
     </keybind>
+    <keybind key="A-S-Tab">
+      <action name="PreviousWindow"/>
+    </keybind>
+    <keybind key="A-F4">
+      <action name="Close"/>
+    </keybind>
     <keybind key="W-q">
       <action name="Exit"/>
     </keybind>
+    <keybind key="W-0">
+      <action name="ToggleOmnipresent"/>
+    </keybind>
+
+    <keybind key="W-a">
+      <action name="ToggleMaximize"/>
+    </keybind>
+    <keybind key="W-Up">
+      <action name="ToggleMaximize"/>
+    </keybind>
+    <keybind key="W-Down">
+      <action name="UnMaximize"/>
+    </keybind>
+    <keybind key="W-Left">
+      <action name="SnapToEdge" direction="left"/>
+    </keybind>
+    <keybind key="W-Right">
+      <action name="SnapToEdge" direction="right"/>
+    </keybind>
+    <keybind key="W-f">
+      <action name="ToggleFullscreen"/>
+    </keybind>
+    <keybind key="W-m">
+      <action name="Iconify"/>
+    </keybind>
+    <keybind key="W-d">
+      <action name="ToggleShowDesktop"/>
+    </keybind>
+    <keybind key="W-Space">
+      <action name="ShowMenu" menu="client-list-combined-menu" atCursor="no">
+        <position>
+          <x>center</x>
+          <y>center</y>
+        </position>
+      </action>
+    </keybind>
+
+    <keybind key="W-1">
+      <action name="GoToDesktop" to="General"/>
+    </keybind>
+    <keybind key="W-2">
+      <action name="GoToDesktop" to="Coding"/>
+    </keybind>
+    <keybind key="W-3">
+      <action name="GoToDesktop" to="Gaming"/>
+    </keybind>
+    <keybind key="W-4">
+      <action name="GoToDesktop" to="Study"/>
+    </keybind>
+    <keybind key="W-S-1">
+      <action name="SendToDesktop" to="General" follow="no"/>
+    </keybind>
+    <keybind key="W-S-2">
+      <action name="SendToDesktop" to="Coding" follow="no"/>
+    </keybind>
+    <keybind key="W-S-3">
+      <action name="SendToDesktop" to="Gaming" follow="no"/>
+    </keybind>
+    <keybind key="W-S-4">
+      <action name="SendToDesktop" to="Study" follow="no"/>
+    </keybind>
+    <keybind key="W-C-Left">
+      <action name="GoToDesktop" to="left" wrap="yes"/>
+    </keybind>
+    <keybind key="W-C-Right">
+      <action name="GoToDesktop" to="right" wrap="yes"/>
+    </keybind>
+    <keybind key="W-C-S-Left">
+      <action name="SendToDesktop" to="left" follow="no" wrap="yes"/>
+    </keybind>
+    <keybind key="W-C-S-Right">
+      <action name="SendToDesktop" to="right" follow="no" wrap="yes"/>
+    </keybind>
   </keyboard>
+
+  <mouse>
+    <default/>
+  </mouse>
 </labwc_config>

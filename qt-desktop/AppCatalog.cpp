@@ -77,6 +77,11 @@ int AppCatalogModel::count() const
     return m_applications.size();
 }
 
+QStringList AppCatalogModel::runningAliases() const
+{
+    return m_runningAliases;
+}
+
 void AppCatalogModel::clearApplications()
 {
     for (DesktopApplication &entry : m_applications) {
@@ -226,21 +231,25 @@ bool AppCatalogModel::launch(const QString &appId)
     return launchEntry(m_applications[index]);
 }
 
+static QHash<QString, QStringList> appAliasCandidates()
+{
+    return {
+        {QStringLiteral("nerufiles"), {QStringLiteral("dolphin"), QStringLiteral("thunar"), QStringLiteral("nautilus"), QStringLiteral("nemo"), QStringLiteral("pcmanfm")}},
+        {QStringLiteral("nerubrowser"), {QStringLiteral("firefox"), QStringLiteral("chromium"), QStringLiteral("brave"), QStringLiteral("vivaldi"), QStringLiteral("google-chrome")}},
+        {QStringLiteral("neruterminal"), {QStringLiteral("konsole"), QStringLiteral("kitty"), QStringLiteral("alacritty"), QStringLiteral("wezterm"), QStringLiteral("foot"), QStringLiteral("xterm")}},
+        {QStringLiteral("nerucode"), {QStringLiteral("code-oss"), QStringLiteral("codium"), QStringLiteral("code"), QStringLiteral("kate"), QStringLiteral("mousepad")}},
+        {QStringLiteral("steam"), {QStringLiteral("steam")}},
+        {QStringLiteral("nerugallery"), {QStringLiteral("gwenview"), QStringLiteral("loupe"), QStringLiteral("ristretto"), QStringLiteral("eog"), QStringLiteral("feh")}}
+    };
+}
+
 bool AppCatalogModel::launchAlias(const QString &alias)
 {
     const QString key = alias.trimmed().toCaseFolded();
     if (key.isEmpty())
         return false;
 
-    const QHash<QString, QStringList> candidates = {
-        {QStringLiteral("nerufiles"), {QStringLiteral("dolphin"), QStringLiteral("thunar"), QStringLiteral("nautilus"), QStringLiteral("nemo"), QStringLiteral("pcmanfm")}},
-        {QStringLiteral("nerubrowser"), {QStringLiteral("firefox"), QStringLiteral("chromium"), QStringLiteral("brave"), QStringLiteral("vivaldi"), QStringLiteral("google-chrome")}},
-        {QStringLiteral("neruterminal"), {QStringLiteral("konsole"), QStringLiteral("kitty"), QStringLiteral("alacritty"), QStringLiteral("wezterm"), QStringLiteral("foot"), QStringLiteral("xterm")}},
-        {QStringLiteral("nerucode"), {QStringLiteral("code-oss"), QStringLiteral("codium"), QStringLiteral("code"), QStringLiteral("kate"), QStringLiteral("mousepad")}},
-        {QStringLiteral("steam"), {QStringLiteral("steam")}},
-        {QStringLiteral("nerugallery"), {QStringLiteral("gwenview"), QStringLiteral("loupe"), QStringLiteral("ristretto"), QStringLiteral("eog"), QStringLiteral("feh")}},
-        {QStringLiteral("nerusettings"), {QStringLiteral("systemsettings"), QStringLiteral("gnome-control-center"), QStringLiteral("xfce4-settings")}}
-    };
+    const QHash<QString, QStringList> candidates = appAliasCandidates();
 
     const QStringList preferred = candidates.value(key);
     for (const QString &candidate : preferred) {
@@ -314,5 +323,24 @@ void AppCatalogModel::scanProcesses()
             const QModelIndex changed = index(static_cast<int>(i), 0);
             emit dataChanged(changed, changed, {RunningRole, ProcessCountRole});
         }
+    }
+
+    QStringList aliases;
+    const auto candidates = appAliasCandidates();
+    for (auto it = candidates.cbegin(); it != candidates.cend(); ++it) {
+        bool running = false;
+        for (const QString &candidate : it.value()) {
+            if (!processesByExecutable.value(candidate).isEmpty()) {
+                running = true;
+                break;
+            }
+        }
+        if (running)
+            aliases.push_back(it.key());
+    }
+    aliases.sort();
+    if (aliases != m_runningAliases) {
+        m_runningAliases = aliases;
+        emit runningAliasesChanged();
     }
 }

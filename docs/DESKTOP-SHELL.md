@@ -1,84 +1,94 @@
-# NeruOS Standalone Desktop Shell
+# NeruOS Nebula Desktop Shell
 
-## Product direction
+## Current architecture
 
-NeruOS develops its own shell UI in Qt 6 / QML. The shell is not intended to be a KDE Plasma theme. The current architecture is a set of small components that share Nebula design tokens and communicate through signals and explicit properties.
+NeruOS is a dedicated Wayland live session built around a native Qt 6 / C++ / QML desktop shell. The VM Alpha profile starts a labwc Wayland session, then launches the NeruOS boot splash and the full shell in sequence.
 
-## Component map
+- **Qt Quick shell:** draws the desktop, menu bar, dock, control center, notification center, search, file manager, settings, and session panel.
+- **labwc:** owns native window creation, focus, decoration, minimize/maximize, snapping, window switching, and four virtual desktops.
+- **System services:** NetworkManager, PipeWire/WirePlumber, BlueZ, systemd-logind, and the session D-Bus provide hardware and session operations.
+- **GIO:** discovers and launches installed Linux desktop entries.
+- **User preferences:** QSettings stores wallpaper, accent color, appearance preference, and dock pins in the user's profile.
 
-| Component | Responsibility | Prototype state |
-|---|---|---|
-| NeruBar | Active demo-app menu, clock, status actions | Dynamic menu groups and clickable prototype actions |
-| NeruDock | Floating app launcher, magnification, app aliases | Pointer-driven scaling, tooltips, native GIO launch requests |
-| NeruSearch | Discover, filter, launch installed Linux apps | GIO catalog and process status |
-| NeruCenter | Quick settings / notification surface | UI state only |
-| NeruSpace | Workspace identity | Four selectable labels and shortcuts |
-| Navigation Rail | Secondary app navigation | Hidden edge-triggered panel |
+The shell does not replace the compositor. It is the desktop shell running inside the dedicated labwc session.
 
-## Application discovery and launch
+## Priority 1 — Native window management
 
-NeruSearch uses GIO to enumerate visible installed desktop entries and launch them through the desktop entry's application metadata.
+Native application windows are managed by labwc. The profile configures four named desktops, a window switcher, maximize/restore, minimize, close, snapping, and show-desktop shortcuts.
 
-Process status is a best-effort match between each entry's executable and process names visible in /proc. It can miss D-Bus, sandboxed, wrapped, or helper-based applications and can mark multiple entries that share an executable. It is not active-window tracking.
+NeruOS exposes these operations from its Window menu through `WorkspaceController` and `wtype`. The shell window is configured to remain present across the virtual desktops. App-specific process matching is best-effort and is not identical to focused-window tracking.
 
-See [Application Discovery and Launch](APPLICATION-LAUNCHING.md).
+## Priority 2 — NeruDock integration
 
-## NeruDock magnification behavior
+The dock reads individually replaceable PNG icons from `assets/icons/`. Each dock item keeps its image aspect ratio, magnifies on hover, shows an active/running indicator, and dispatches application requests.
 
-1. Pointer position is mapped into the dock's local coordinate system.
-2. Each icon compares its center position with the pointer's horizontal position.
-3. A distance-based scale factor is calculated.
-4. A short eased animation updates the icon scale.
-5. When the pointer leaves the icon, the scale returns to its resting value.
+The app catalog scans visible Linux desktop entries through GIO and checks matching process names under `/proc`. When an alias is already running, the dock opens labwc's native client list rather than spawning another copy. Generic launchers, sandbox wrappers, D-Bus-activated applications, and helper processes can make process matching incomplete.
 
-The dock can launch known application aliases through the catalog. The dock's original demo-app indicator is not yet a full native-window task indicator.
+Pinned applications are stored in `DesktopSettings` and rebuilt into the dock when preferences change.
 
-## NeruBar dynamic context
+## Priority 3 — NeruCenter and system controls
 
-NeruBar receives the selected demo application's name from the parent shell. It builds a menu group for that context:
+`SystemControls` exposes real session state and commands without running sudo:
 
-- Desktop: NeruOS, File, View, Workspace, Window, Help.
-- NeruFiles: File, Edit, View, Go, Window, Help.
-- NeruCode: File, Edit, Selection, View, Run, Terminal, Help.
-- NeruSettings: NeruSettings, Appearance, Desktop, System, Help.
-- Steam: Steam, View, Friends, Games, Help.
-- NeruStore: Store, Categories, Library, Help.
+- **Wi-Fi:** NetworkManager `nmcli`; the user session must be authorized by polkit.
+- **Audio:** PipeWire/WirePlumber `wpctl`, with `pactl` fallback, when a default output exists.
+- **Bluetooth:** BlueZ `bluetoothctl`; the image enables the Bluetooth service, but the device must expose a controller.
+- **Brightness:** `/sys/class/backlight`; the slider is enabled only when the backlight node is writable by the session user.
+- **Battery:** reads capacity and charging state from `/sys/class/power_supply`.
 
-Native application launching does not yet update the global app menu from the actual focused native window. That requires window-manager integration.
+Controls are disabled or report an unavailable status when the service or hardware is missing. The shell does not change system permissions or elevate privileges.
 
-## Keyboard interaction
+## Priority 4 — Notification Center
 
-| Shortcut | Action |
-|---|---|
-| Alt + Space | Toggle NeruSearch |
-| Escape | Close transient panels and demo window |
-| Ctrl + Alt + 1 | Select General |
-| Ctrl + Alt + 2 | Select Coding |
-| Ctrl + Alt + 3 | Select Gaming |
-| Ctrl + Alt + 4 | Select Study |
+`NotificationBridge` registers the freedesktop `org.freedesktop.Notifications` service on the session D-Bus. Applications can send notifications to NeruOS; the shell stores the latest 30 notification entries in the current session and supports replacement and close events. The center also receives NeruOS system and operation messages.
 
-## Prototype boundary: shell vs compositor
+The current history is in-memory and is cleared when the shell exits. It is not yet a persistent notification database.
 
-A desktop shell and a compositor/window manager are different responsibilities.
+## Priority 5 — NeruSpace
 
-The current prototype is a normal maximized Qt application. It relies on the host desktop session to:
-- Create and manage the application window.
-- Render the surface and route pointer / keyboard events.
-- Manage focus, other windows, display outputs, and workspaces.
+labwc provides four actual virtual desktops: General, Coding, Gaming, and Study. Super+1–4 switches desktops; Super+Shift+1–4 moves the focused window; Ctrl+Alt+1–4 invokes the same switch action from the shell and updates the menu-bar label. Window Overview and Next Window invoke the labwc client list and window switcher.
 
-The prototype does not yet:
-- Replace KWin, Mutter, or another window manager / compositor.
-- Provide a dedicated login session or display-manager entry.
-- Manage native application windows, focus, minimize, or close.
-- Know which native window is active.
-- Own system notifications or hardware controls.
-- Provide an installer or bootable ISO.
+## Priority 6 — NeruFiles
 
-A later engineering decision must determine whether NeruOS integrates a supported compositor/window manager or adopts another explicit route. A shell UI does not automatically supply window management.
+NeruFiles is a native Qt Quick window backed by `FileSystemModel`. It supports home/location navigation, directory listing, selection, refresh, create/rename, move-to-trash, and optional hidden-file visibility. File operations are performed as the current user and report permission or I/O failures through NeruOS notifications.
 
-## Next implementation work
+## Priority 7 — NeruSettings
 
-1. Native application discovery and launch have an initial GIO implementation.
-2. Integrate native app/window state with a selected session architecture.
-3. Connect NeruCenter to real user-session services with least privilege.
-4. Decide compositor and independent session strategy.
+NeruSettings stores wallpaper path, accent color, dark-appearance preference, and pinned dock applications using QSettings. Wallpaper selection is applied through `WallpaperManager` and restored when the shell starts. Dock pin/unpin updates the live dock immediately. The dark-appearance preference is stored; full light-palette coverage across every shell component remains future work.
+
+## Priority 8 — Login and session management
+
+The Session Panel calls `systemd-logind` for logout, suspend, restart, and power-off. Lock Screen uses `swaylock` with an ISO PAM profile that includes `system-auth`.
+
+The image packages greetd, Regreet, and cage and carries a reference `/etc/greetd/config.toml.template` for persistent installations. The live VM deliberately keeps its temporary auto-login user, so greetd is not enabled and there is no interactive login prompt in VM Alpha. A persistent installation must provision a normal user and a dedicated greeter account before enabling the greetd service.
+
+## Boot identity
+
+- UEFI uses the themed NeruOS GRUB menu.
+- Legacy BIOS uses the ArchISO-supported Syslinux menu with the matching Nebula palette.
+- The native `BootAnimation.qml` splash appears after the Wayland session starts and before the full desktop shell.
+- The early firmware and kernel boot sequence remains outside Qt/QML.
+
+## Development and validation
+
+Build the native shell:
+
+```bash
+cd qt-desktop
+cmake -S . -B build -G Ninja
+cmake --build build -j2
+qmllint Main.qml NeruBar.qml NeruDock.qml NeruFiles.qml NeruSettings.qml NotificationCenter.qml SessionPanel.qml
+```
+
+Useful smoke-test options:
+
+```bash
+./build/neruos-nebula --show-center
+./build/neruos-nebula --show-files
+./build/neruos-nebula --show-settings
+./build/neruos-nebula --show-notifications
+./build/neruos-nebula --show-session
+./build/neruos-nebula --test-notifications
+```
+
+The VM Alpha image is temporary and diskless. Changes made inside a running VM disappear when it is powered off.

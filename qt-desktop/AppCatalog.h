@@ -23,6 +23,7 @@ class AppCatalogModel final : public QAbstractListModel
 {
     Q_OBJECT
     Q_PROPERTY(int count READ count NOTIFY countChanged)
+    Q_PROPERTY(QStringList runningAliases READ runningAliases NOTIFY runningAliasesChanged)
 
 public:
     enum Roles {
@@ -44,6 +45,7 @@ public:
     QHash<int, QByteArray> roleNames() const override;
 
     int count() const;
+    QStringList runningAliases() const;
 
     Q_INVOKABLE void refresh();
     Q_INVOKABLE bool launch(const QString &appId);
@@ -52,6 +54,7 @@ public:
 
 signals:
     void countChanged();
+    void runningAliasesChanged();
     void launchStarted(const QString &displayName, const QString &appId);
     void launchError(const QString &displayName, const QString &message);
 
@@ -66,5 +69,6 @@ private:
     static bool canTrackExecutable(const QString &executable);
 
     QVector<DesktopApplication> m_applications;
+    QStringList m_runningAliases;
     QTimer m_processTimer;
 };

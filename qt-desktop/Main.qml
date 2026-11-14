@@ -11,58 +11,120 @@ ApplicationWindow {
     minimumWidth: 1024
     minimumHeight: 640
     visible: true
-    visibility: Window.Maximized
-    title: "NeruOS Nebula — Standalone Shell Prototype"
+    // NeruOS is the desktop session itself, not a decorated application window.
+    // Fullscreen + frameless removes the labwc title bar and window controls.
+    flags: Qt.Window | Qt.FramelessWindowHint
+    visibility: Window.FullScreen
+    title: "NeruOS"
     color: "#080F1A"
 
-    property string activeWorkspace: "General"
+    property string activeWorkspace: "NeruSpace"
     property string activeApp: ""
     property bool centerOpen: false
     property bool searchOpen: false
     property bool railVisible: false
     property bool aboutOpen: false
     property bool updatePanelOpen: false
+    property bool notificationCenterOpen: false
+    property bool sessionPanelOpen: false
+    property string pendingDockAlias: ""
     property string aboutHeading: "About NeruOS"
-    property url customWallpaper: ""
     property date currentTime: new Date()
-    property int brightness: 78
-    property int volume: 64
-    property bool wifiEnabled: true
-    property bool bluetoothEnabled: true
+    property int pendingVolume: 64
     property string notificationText: ""
+
+    WallpaperManager {
+        id: wallpaperManager
+    }
 
     readonly property color obsidian: "#080F1A"
     readonly property color midnight: "#151D2F"
-    readonly property color cyan: "#54C8EB"
+    readonly property color cyan: ["#54C8EB", "#6B8AFD", "#A78BFA", "#E879F9"][desktopSettings.accentIndex]
     readonly property color violet: "#9277E8"
     readonly property color aurora: "#E57BFF"
     readonly property color primaryText: "#F2F5FF"
     readonly property color secondaryText: "#AAB6D0"
 
-    property var dockApps: [
-        { name: "NeruSearch", glyph: "⌕", tint: "#4C8FEA" },
-        { name: "NeruFiles", glyph: "▰", tint: "#54C8EB" },
-        { name: "NeruBrowser", glyph: "◉", tint: "#55A9E8" },
-        { name: "NeruTerminal", glyph: ">_", tint: "#354765" },
-        { name: "NeruCode", glyph: "</>", tint: "#368ED8" },
-        { name: "Steam", glyph: "✣", tint: "#23395F" },
-        { name: "NeruGallery", glyph: "▧", tint: "#9277E8" },
-        { name: "NeruSettings", glyph: "⚙", tint: "#71819E" }
-    ]
+    property var dockApps: []
+
+    ListModel {
+        id: notificationModel
+    }
+
+    function rebuildDockApps() {
+        const iconMap = {
+            "NeruFiles": "qrc:/assets/icons/files.png",
+            "NeruBrowser": "qrc:/assets/icons/browser.png",
+            "NeruTerminal": "qrc:/assets/icons/terminal.png",
+            "NeruCode": "qrc:/assets/icons/code.png",
+            "NeruSettings": "qrc:/assets/icons/settings.png",
+            "NeruSearch": "qrc:/assets/icons/apps.png",
+            "Steam": "qrc:/assets/icons/games.png"
+        }
+        dockApps = desktopSettings.pinnedApps.map(function(alias) {
+            return { name: alias, icon: iconMap[alias] || "qrc:/assets/icons/apps.png" }
+        })
+    }
+
+    function applySavedWallpaper() {
+        if (desktopSettings.wallpaperPath.length > 0)
+            wallpaperManager.setWallpaper(desktopSettings.wallpaperPath)
+        else
+            wallpaperManager.resetWallpaper()
+    }
+
+    Component.onCompleted: {
+        rebuildDockApps()
+        applySavedWallpaper()
+    }
+
+    Connections {
+        target: desktopSettings
+        function onWallpaperPathChanged() {
+            root.applySavedWallpaper()
+        }
+    }
+
+    Connections {
+        target: desktopSettings
+        function onPinnedAppsChanged() {
+            root.rebuildDockApps()
+        }
+    }
 
     function openApp(name) {
-        if (name === "NeruSearch") {
-            searchOpen = !searchOpen
-            centerOpen = false
-            aboutOpen = false
-            return
-        }
-        activeApp = name
-        searchOpen = false
         centerOpen = false
+        searchOpen = false
         aboutOpen = false
         updatePanelOpen = false
+        notificationCenterOpen = false
+        sessionPanelOpen = false
         railVisible = false
+
+        if (name === "NeruSearch") {
+            searchOpen = true
+            searchField.forceActiveFocus()
+            return
+        }
+
+        if (name === "NeruFiles" || name === "NeruSettings") {
+            activeApp = name
+            return
+        }
+
+        activeApp = ""
+
+        // Do not spawn duplicate copies when the app is already running.
+        // Open labwc's native client list so the user can focus its existing
+        // window, including windows on another virtual desktop.
+        if (appCatalog.runningAliases.indexOf(name.toLowerCase()) >= 0) {
+            workspaceController.showWindowMenu()
+            return
+        }
+
+        pendingDockAlias = name
+        if (!appCatalog.launchAlias(name))
+            pendingDockAlias = ""
     }
 
     function closeTransientUi() {
@@ -70,26 +132,118 @@ ApplicationWindow {
         searchOpen = false
         aboutOpen = false
         updatePanelOpen = false
+        notificationCenterOpen = false
+        sessionPanelOpen = false
         activeApp = ""
     }
 
     function launchDockApp(alias) {
-        if (alias === "NeruSearch") {
-            openApp("NeruSearch")
-            return
-        }
-        appCatalog.launchAlias(alias)
+        openApp(alias)
     }
 
-    function showNotification(message) {
-        notificationText = message
+    function appendNotification(application, title, message, timeText, bridgeId) {
+        const itemId = bridgeId || 0
+        let replaced = false
+        if (itemId > 0) {
+            for (let i = 0; i < notificationModel.count; ++i) {
+                if (notificationModel.get(i).id === itemId) {
+                    notificationModel.set(i, {
+                        id: itemId,
+                        application: application || "Application",
+                        title: title || application || "Notification",
+                        message: message || "",
+                        timeText: timeText || Qt.formatDateTime(new Date(), "hh:mm")
+                    })
+                    replaced = true
+                    break
+                }
+            }
+        }
+        if (!replaced) {
+            notificationModel.append({
+                id: itemId,
+                application: application || "Application",
+                title: title || application || "Notification",
+                message: message || "",
+                timeText: timeText || Qt.formatDateTime(new Date(), "hh:mm")
+            })
+        }
+        while (notificationModel.count > 30)
+            notificationModel.remove(0)
+        notificationText = (title || application || "Notification")
+                         + (message ? ": " + message : "")
         notificationTimer.restart()
     }
 
+    function showNotification(message) {
+        const now = new Date()
+        appendNotification("NeruOS", "NeruOS", message,
+                           Qt.formatDateTime(now, "hh:mm"), 0)
+    }
+
+    Connections {
+        target: notificationBridge
+        function onNotificationReceived(id, application, title, message, timeText) {
+            root.appendNotification(application, title, message, timeText, id)
+        }
+        function onNotificationClosed(id, reason) {
+            for (let i = notificationModel.count - 1; i >= 0; --i) {
+                if (notificationModel.get(i).id === id)
+                    notificationModel.remove(i)
+            }
+        }
+    }
+
+    Connections {
+        target: workspaceController
+        function onActionFailed(message) {
+            root.showNotification(message)
+        }
+    }
+
     function handleMenuAction(action) {
-        if (["General", "Coding", "Gaming", "Study"].indexOf(action) >= 0) {
-            activeWorkspace = action
-            activeApp = ""
+        const workspaces = ["General", "Coding", "Gaming", "Study"]
+        const workspaceIndex = workspaces.indexOf(action)
+        if (workspaceIndex >= 0) {
+            if (workspaceController.switchTo(workspaceIndex + 1)) {
+                activeWorkspace = action
+                showNotification("Switched to " + action)
+            }
+            return
+        }
+
+        if (action === "Window Overview") {
+            workspaceController.showWindowMenu()
+            return
+        }
+        if (action === "Next Window") {
+            workspaceController.nextWindow()
+            return
+        }
+        if (action === "Minimize Window") {
+            workspaceController.minimizeActive()
+            return
+        }
+        if (action === "Maximize / Restore") {
+            workspaceController.toggleMaximize()
+            return
+        }
+        if (action === "Snap Left") {
+            workspaceController.snapActiveLeft()
+            return
+        }
+        if (action === "Snap Right") {
+            workspaceController.snapActiveRight()
+            return
+        }
+        if (action === "Close Window") {
+            workspaceController.closeActive()
+            return
+        }
+        const moveWorkspace = ["Move to General", "Move to Coding",
+                              "Move to Gaming", "Move to Study"].indexOf(action)
+        if (moveWorkspace >= 0) {
+            workspaceController.moveActiveTo(moveWorkspace + 1)
             return
         }
 
@@ -98,15 +252,15 @@ ApplicationWindow {
             return
         }
         if (action === "Reset Wallpaper") {
-            customWallpaper = ""
+            desktopSettings.resetWallpaper()
             return
         }
         if (action === "Toggle Navigation Rail") {
             railVisible = !railVisible
             return
         }
-        if (action === "Close Window" || action === "Show Desktop") {
-            activeApp = ""
+        if (action === "Show Desktop") {
+            workspaceController.showDesktop()
             return
         }
         if (action === "About NeruOS") {
@@ -122,7 +276,15 @@ ApplicationWindow {
             return
         }
         if (action === "New Window") {
-            activeApp = "NeruFiles"
+            openApp("NeruFiles")
+            return
+        }
+        if (action === "Notifications") {
+            notificationCenterOpen = true
+            return
+        }
+        if (action === "User & Session") {
+            sessionPanelOpen = true
             return
         }
         if (action.length > 0)
@@ -140,6 +302,39 @@ ApplicationWindow {
         id: notificationTimer
         interval: 4200
         onTriggered: root.notificationText = ""
+    }
+
+    Timer {
+        id: volumeDebounce
+        interval: 180
+        repeat: false
+        onTriggered: systemControls.setVolume(root.pendingVolume)
+    }
+
+    Connections {
+        target: systemControls
+
+        function onOperationFailed(message) {
+            root.showNotification(message)
+        }
+    }
+
+    Connections {
+        target: fileSystemModel
+        function onOperationFailed(message) {
+            root.showNotification(message)
+        }
+    }
+
+    Connections {
+        target: sessionManager
+        function onActionFailed(action, message) {
+            root.showNotification(action + ": " + message)
+        }
+        function onActionStarted(action) {
+            if (action !== "logout" && action !== "restart" && action !== "poweroff")
+                root.showNotification(action + " requested")
+        }
     }
 
     Timer {
@@ -163,12 +358,14 @@ ApplicationWindow {
         target: appCatalog
 
         function onLaunchStarted(displayName, appId) {
-            root.showNotification("Launched " + displayName)
+            root.pendingDockAlias = ""
             root.searchOpen = false
             root.centerOpen = false
+            root.showNotification("Launched " + displayName)
         }
 
         function onLaunchError(displayName, message) {
+            root.pendingDockAlias = ""
             root.showNotification(displayName + ": " + message)
         }
     }
@@ -177,31 +374,13 @@ ApplicationWindow {
         id: wallpaperDialog
         title: "Choose a wallpaper for NeruOS"
         nameFilters: ["Images (*.png *.jpg *.jpeg *.webp *.svg)"]
-        onAccepted: root.customWallpaper = selectedFile
+        onAccepted: desktopSettings.setWallpaperPath(selectedFile.toString())
     }
 
-    Image {
+    DesktopBackground {
+        id: desktopBackground
         anchors.fill: parent
-        source: root.customWallpaper.toString().length > 0
-                ? root.customWallpaper
-                : "qrc:/assets/nebula-wallpaper.svg"
-        fillMode: Image.PreserveAspectCrop
-        asynchronous: true
-        cache: true
-    }
-
-    Rectangle {
-        anchors.fill: parent
-        gradient: Gradient {
-            GradientStop { position: 0.0; color: "#30050A18" }
-            GradientStop { position: 0.58; color: "#18070D22" }
-            GradientStop { position: 1.0; color: "#9A070D20" }
-        }
-    }
-
-    Rectangle {
-        anchors.fill: parent
-        color: "#10050A18"
+        wallpaperSource: wallpaperManager.currentWallpaper
     }
 
     // Standalone NeruBar: menu labels follow the active application context.
@@ -210,11 +389,19 @@ ApplicationWindow {
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.right: parent.right
-        anchors.margins: 16
+        anchors.topMargin: 8
+        anchors.leftMargin: 10
+        anchors.rightMargin: 10
         z: 20
+        blurSource: desktopBackground
         appName: root.activeApp
         workspaceName: root.activeWorkspace
         clockText: Qt.formatDateTime(root.currentTime, "ddd, dd MMM  hh:mm")
+        wifiStatus: systemControls.wifiStatus
+        bluetoothStatus: systemControls.bluetoothStatus
+        audioStatus: systemControls.audioStatus
+        batteryStatus: systemControls.batteryStatus
+        notificationCount: notificationModel.count
         updateCount: updateChecker.updateCount
         updateState: updateChecker.state
         onSearchRequested: root.openApp("NeruSearch")
@@ -230,56 +417,23 @@ ApplicationWindow {
             root.searchOpen = false
             root.aboutOpen = false
             root.updatePanelOpen = false
+            root.notificationCenterOpen = false
+            root.sessionPanelOpen = false
+        }
+        onNotificationRequested: {
+            root.notificationCenterOpen = !root.notificationCenterOpen
+            root.centerOpen = false
+            root.searchOpen = false
+            root.sessionPanelOpen = false
+        }
+        onSessionRequested: {
+            root.sessionPanelOpen = !root.sessionPanelOpen
+            root.centerOpen = false
+            root.searchOpen = false
+            root.notificationCenterOpen = false
         }
         onMenuActionRequested: function(action) {
             root.handleMenuAction(action)
-        }
-    }
-
-    // Calm desktop identity.
-    Column {
-        anchors.left: parent.left
-        anchors.leftMargin: 62
-        anchors.top: topBar.bottom
-        anchors.topMargin: 70
-        spacing: 9
-        z: 2
-
-        Text {
-            text: "Find your flow."
-            color: "#F3F5FF"
-            font.pixelSize: 38
-            font.weight: Font.Light
-        }
-        Text {
-            text: "A calm space for everything you create."
-            color: "#D5DDF4"
-            font.pixelSize: 15
-        }
-        Rectangle {
-            width: 156
-            height: 29
-            radius: 15
-            color: "#A50B1730"
-            border.color: "#657C9CB9"
-            Row {
-                anchors.centerIn: parent
-                spacing: 7
-                Rectangle {
-                    width: 6
-                    height: 6
-                    radius: 3
-                    color: root.cyan
-                    anchors.verticalCenter: parent.verticalCenter
-                }
-                Text {
-                    text: "NEBULA EDITION"
-                    color: "#D8E7FC"
-                    font.pixelSize: 9
-                    font.letterSpacing: 1.1
-                    font.bold: true
-                }
-            }
         }
     }
 
@@ -322,12 +476,12 @@ ApplicationWindow {
 
             Repeater {
                 model: [
-                    { label: "Home", glyph: "⌂", app: "" },
-                    { label: "Files", glyph: "▰", app: "NeruFiles" },
-                    { label: "Store", glyph: "◇", app: "NeruStore" },
-                    { label: "Code", glyph: "</>", app: "NeruCode" },
-                    { label: "Games", glyph: "✣", app: "Steam" },
-                    { label: "Settings", glyph: "⚙", app: "NeruSettings" }
+                    { label: "Home", icon: "qrc:/assets/icons/home.png", app: "" },
+                    { label: "Files", icon: "qrc:/assets/icons/files.png", app: "NeruFiles" },
+                    { label: "Store", icon: "qrc:/assets/icons/apps.png", app: "NeruStore" },
+                    { label: "Code", icon: "qrc:/assets/icons/code.png", app: "NeruCode" },
+                    { label: "Games", icon: "qrc:/assets/icons/games.png", app: "Steam" },
+                    { label: "Settings", icon: "qrc:/assets/icons/settings.png", app: "NeruSettings" }
                 ]
 
                 delegate: Item {
@@ -338,10 +492,14 @@ ApplicationWindow {
                     Column {
                         anchors.centerIn: parent
                         spacing: 3
-                        Text {
-                            text: modelData.glyph
-                            color: "#D5DDF6"
-                            font.pixelSize: 23
+                        Image {
+                            source: modelData.icon
+                            sourceSize.width: 96
+                            sourceSize.height: 96
+                            width: 30
+                            height: 30
+                            fillMode: Image.PreserveAspectFit
+                            smooth: true
                             anchors.horizontalCenter: parent.horizontalCenter
                         }
                         Text {
@@ -364,81 +522,46 @@ ApplicationWindow {
         }
     }
 
-    // Workspace presets.
-    Rectangle {
-        id: workspaceStrip
-        anchors.top: topBar.bottom
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.topMargin: 18
-        width: 360
-        height: 44
-        radius: 15
-        color: "#A90B1428"
-        border.color: "#4D7185AE"
-        z: 12
-
-        Row {
-            anchors.fill: parent
-            anchors.margins: 5
-            spacing: 4
-
-            Repeater {
-                model: ["General", "Coding", "Gaming", "Study"]
-
-                delegate: Rectangle {
-                    required property string modelData
-                    width: (workspaceStrip.width - 18) / 4
-                    height: 34
-                    radius: 11
-                    color: root.activeWorkspace === modelData ? "#7E594AB4" : "transparent"
-                    border.color: root.activeWorkspace === modelData ? "#9277E8" : "transparent"
-
-                    Text {
-                        anchors.centerIn: parent
-                        text: modelData
-                        color: root.activeWorkspace === modelData ? "#FFFFFF" : root.secondaryText
-                        font.pixelSize: 10
-                        font.weight: root.activeWorkspace === modelData ? Font.DemiBold : Font.Normal
-                    }
-
-                    MouseArea {
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.activeWorkspace = modelData
-                    }
-                }
-            }
-        }
-    }
-
-    // Standalone floating NeruDock with pointer-driven magnification.
-    NeruDock {
+    // Floating glass dock. Every app icon is an independent PNG file.
+    ApplicationDock {
         id: dock
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
-        anchors.bottomMargin: 22
+        anchors.bottomMargin: 14
         z: 50
+        blurSource: desktopBackground
         applications: root.dockApps
+        runningApplications: appCatalog.runningAliases
         activeApplication: root.activeApp
         onApplicationRequested: function(appName) {
             root.launchDockApp(appName)
         }
     }
 
-    // NeruCenter — visual control prototype; no hardware APIs are connected yet.
+    // NeruCenter — hardware/session controls backed by SystemControls.
     Rectangle {
         id: centerPanel
-        width: 360
-        height: 430
+        width: 348
+        height: 448
         anchors.right: parent.right
         anchors.top: topBar.bottom
-        anchors.rightMargin: 18
-        anchors.topMargin: 18
-        radius: 22
-        color: "#F00D172B"
-        border.color: "#8495B9D5"
+        anchors.rightMargin: 12
+        anchors.topMargin: 12
+        radius: 24
+        color: "transparent"
+        border.color: "transparent"
+        border.width: 0
         visible: root.centerOpen
         z: 60
+
+        GlassPanel {
+            anchors.fill: parent
+            sourceItem: desktopBackground
+            tint: "#C9EAF2FC"
+            borderColor: "#E8FFFFFF"
+            cornerRadius: centerPanel.radius
+            blurAmount: 0.86
+        }
 
         ColumnLayout {
             anchors.fill: parent
@@ -447,9 +570,9 @@ ApplicationWindow {
 
             RowLayout {
                 Text {
-                    text: "NeruCenter"
-                    color: root.primaryText
-                    font.pixelSize: 19
+                    text: "Control Center"
+                    color: "#1D2C45"
+                    font.pixelSize: 17
                     font.bold: true
                 }
                 Item { Layout.fillWidth: true }
@@ -467,10 +590,21 @@ ApplicationWindow {
 
                 Repeater {
                     model: [
-                        { label: "Wi-Fi", detail: root.wifiEnabled ? "Demo: Connected" : "Demo: Off", key: "wifi" },
-                        { label: "Bluetooth", detail: root.bluetoothEnabled ? "Demo: Enabled" : "Demo: Off", key: "bluetooth" },
-                        { label: "Display", detail: "Night Light (demo)", key: "display" },
-                        { label: "Sound", detail: root.volume + "% (demo)", key: "sound" }
+                        { label: "Wi-Fi", detail: systemControls.wifiStatus,
+                          key: "wifi", available: systemControls.wifiAvailable,
+                          active: systemControls.wifiEnabled },
+                        { label: "Bluetooth", detail: systemControls.bluetoothStatus,
+                          key: "bluetooth", available: systemControls.bluetoothAvailable && systemControls.bluetoothKnown,
+                          active: systemControls.bluetoothPowered },
+                        { label: "Display", detail: systemControls.brightnessStatus,
+                          key: "display", available: systemControls.brightnessAvailable,
+                          active: systemControls.brightnessWritable },
+                        { label: "Sound", detail: systemControls.audioStatus,
+                          key: "sound", available: systemControls.audioAvailable,
+                          active: systemControls.audioAvailable && !systemControls.audioMuted },
+                        { label: "Battery", detail: systemControls.batteryStatus,
+                          key: "battery", available: systemControls.batteryAvailable,
+                          active: systemControls.batteryStatus.toLowerCase().indexOf("charging") >= 0 }
                     ]
 
                     delegate: Rectangle {
@@ -478,8 +612,10 @@ ApplicationWindow {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 68
                         radius: 13
-                        color: "#B8233553"
-                        border.color: "#456A84AA"
+                        color: !modelData.available ? "#78E9EEF6"
+                             : (modelData.active ? "#D6FFFFFF" : "#A7FFFFFF")
+                        border.color: "#68FFFFFF"
+                        opacity: modelData.available ? 1.0 : 0.78
 
                         Column {
                             anchors.left: parent.left
@@ -488,24 +624,31 @@ ApplicationWindow {
                             spacing: 4
                             Text {
                                 text: modelData.label
-                                color: root.primaryText
+                                color: "#1C2B44"
                                 font.pixelSize: 12
                                 font.bold: true
                             }
                             Text {
                                 text: modelData.detail
-                                color: root.secondaryText
-                                font.pixelSize: 10
+                                color: "#687991"
+                                font.pixelSize: 9
+                                elide: Text.ElideRight
+                                width: parent.parent.width - 24
                             }
                         }
 
                         MouseArea {
                             anchors.fill: parent
+                            enabled: (modelData.key === "wifi" && modelData.available
+                                      && systemControls.wifiKnown && !systemControls.wifiBusy)
+                                      || (modelData.key === "bluetooth" && modelData.available
+                                      && !systemControls.bluetoothBusy)
+                            cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
                             onClicked: {
                                 if (modelData.key === "wifi")
-                                    root.wifiEnabled = !root.wifiEnabled
-                                if (modelData.key === "bluetooth")
-                                    root.bluetoothEnabled = !root.bluetoothEnabled
+                                    systemControls.toggleWifi()
+                                else if (modelData.key === "bluetooth")
+                                    systemControls.toggleBluetooth()
                             }
                         }
                     }
@@ -515,39 +658,77 @@ ApplicationWindow {
             Rectangle {
                 Layout.fillWidth: true
                 height: 1
-                color: "#52627E"
+                color: "#56708CA8"
             }
 
             RowLayout {
-                Text { text: "Brightness (demo)"; color: root.secondaryText; font.pixelSize: 11 }
+                Text { text: "Brightness"; color: "#52647D"; font.pixelSize: 11 }
                 Item { Layout.fillWidth: true }
-                Text { text: root.brightness + "%"; color: root.primaryText; font.pixelSize: 11 }
+                Text {
+                    text: systemControls.brightnessStatus
+                    color: "#1C2B44"
+                    font.pixelSize: 10
+                }
             }
             Slider {
+                id: brightnessSlider
                 Layout.fillWidth: true
                 from: 0
                 to: 100
-                value: root.brightness
-                onMoved: root.brightness = Math.round(value)
+                enabled: systemControls.brightnessWritable
+                onMoved: systemControls.setBrightness(Math.round(value))
+                Binding {
+                    target: brightnessSlider
+                    property: "value"
+                    value: systemControls.brightness
+                    when: !brightnessSlider.pressed
+                }
+                ToolTip.text: enabled ? "Adjust display brightness"
+                                      : "No writable backlight device is available to this user"
+                ToolTip.visible: hovered
             }
 
             RowLayout {
-                Text { text: "Volume (demo)"; color: root.secondaryText; font.pixelSize: 11 }
+                Text { text: "Volume"; color: "#52647D"; font.pixelSize: 11 }
                 Item { Layout.fillWidth: true }
-                Text { text: root.volume + "%"; color: root.primaryText; font.pixelSize: 11 }
+                ToolButton {
+                    text: systemControls.audioMuted ? "Unmute" : "Mute"
+                    enabled: systemControls.audioAvailable && !systemControls.audioBusy
+                    onClicked: systemControls.toggleMute()
+                    ToolTip.text: "Toggle output mute"
+                    ToolTip.visible: hovered
+                }
+                Text {
+                    text: systemControls.audioStatus
+                    color: "#1C2B44"
+                    font.pixelSize: 10
+                }
             }
             Slider {
+                id: volumeSlider
                 Layout.fillWidth: true
                 from: 0
                 to: 100
-                value: root.volume
-                onMoved: root.volume = Math.round(value)
+                enabled: systemControls.audioAvailable && systemControls.audioKnown
+                Binding {
+                    target: volumeSlider
+                    property: "value"
+                    value: systemControls.volume
+                    when: !volumeSlider.pressed
+                }
+                onMoved: {
+                    root.pendingVolume = Math.round(value)
+                    volumeDebounce.restart()
+                }
+                ToolTip.text: enabled ? "Adjust system output volume"
+                                      : "No default audio output is available"
+                ToolTip.visible: hovered
             }
 
             Item { Layout.fillHeight: true }
             Text {
-                text: "Prototype values only — hardware controls are not connected"
-                color: "#778AA9"
+                text: "Wi-Fi uses NetworkManager · Sound uses the active audio session"
+                color: "#71829A"
                 font.pixelSize: 9
                 wrapMode: Text.WordWrap
                 Layout.alignment: Qt.AlignHCenter
@@ -764,184 +945,61 @@ ApplicationWindow {
         }
     }
 
-    // Demo application window. Opening an app changes NeruBar's menu context.
-    Rectangle {
-        id: appWindow
-        width: Math.min(790, root.width - 100)
-        height: Math.min(530, root.height - 190)
-        anchors.centerIn: parent
-        radius: 20
-        color: "#F00E1729"
-        border.color: "#8191AFCB"
-        visible: root.activeApp.length > 0
-        z: 62
+    NeruFiles {
+        id: filesWindow
+        transientParent: root
+        visible: root.activeApp === "NeruFiles"
+        onClosing: root.activeApp = ""
+        onNotificationRequested: function(message) { root.showNotification(message) }
+    }
 
-        ColumnLayout {
-            anchors.fill: parent
-            spacing: 0
-
-            Rectangle {
-                Layout.fillWidth: true
-                height: 54
-                color: "#C7192943"
-                radius: 20
-
-                RowLayout {
-                    anchors.fill: parent
-                    anchors.leftMargin: 18
-                    anchors.rightMargin: 16
-                    Row {
-                        spacing: 7
-                        Repeater {
-                            model: ["#FF687A", "#F2C56A", "#61D69B"]
-                            delegate: Rectangle {
-                                required property string modelData
-                                width: 10
-                                height: 10
-                                radius: 5
-                                color: modelData
-                            }
-                        }
-                    }
-                    Item { Layout.fillWidth: true }
-                    Text {
-                        text: root.activeApp
-                        color: root.primaryText
-                        font.pixelSize: 13
-                        font.bold: true
-                    }
-                    Item { Layout.fillWidth: true }
-                    ToolButton {
-                        text: "×"
-                        onClicked: root.activeApp = ""
-                    }
-                }
-            }
-
-            Rectangle {
-                Layout.fillWidth: true
-                height: 1
-                color: "#3E59718F"
-            }
-
-            Item {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-
-                ColumnLayout {
-                    anchors.fill: parent
-                    anchors.margins: 24
-                    spacing: 18
-
-                    Text {
-                        text: root.activeApp === "NeruSettings" ? "Personalize your space"
-                              : root.activeApp === "NeruFiles" ? "Your files, beautifully organized"
-                              : root.activeApp === "NeruStore" ? "Discover your next app"
-                              : root.activeApp === "Steam" ? "Your game library"
-                              : root.activeApp === "NeruCode" ? "Create something new"
-                              : "Welcome to " + root.activeApp
-                        color: root.primaryText
-                        font.pixelSize: 23
-                        font.weight: Font.Medium
-                    }
-
-                    Text {
-                        text: root.activeApp === "NeruSettings" ? "Make Nebula feel like yours."
-                              : root.activeApp === "NeruFiles" ? "A clean starting point for folders and projects."
-                              : root.activeApp === "NeruStore" ? "A concept storefront for the NeruOS ecosystem."
-                              : root.activeApp === "Steam" ? "Gaming tools and compatible titles will live here."
-                              : "This is an interactive shell prototype, not a system service yet."
-                        color: root.secondaryText
-                        font.pixelSize: 12
-                        wrapMode: Text.WordWrap
-                    }
-
-                    RowLayout {
-                        visible: root.activeApp === "NeruSettings"
-                        Button {
-                            text: "Choose wallpaper"
-                            onClicked: wallpaperDialog.open()
-                        }
-                        Button {
-                            text: "Restore Nebula"
-                            onClicked: root.customWallpaper = ""
-                        }
-                    }
-
-                    GridLayout {
-                        visible: root.activeApp === "NeruFiles"
-                        columns: 3
-                        columnSpacing: 14
-                        rowSpacing: 14
-
-                        Repeater {
-                            model: ["Documents", "Downloads", "Pictures", "Projects", "Music", "Videos"]
-                            delegate: Rectangle {
-                                required property string modelData
-                                Layout.preferredWidth: 145
-                                Layout.preferredHeight: 105
-                                radius: 14
-                                color: "#A21A2943"
-                                border.color: "#52617D9B"
-                                Column {
-                                    anchors.centerIn: parent
-                                    spacing: 8
-                                    Text {
-                                        text: "▰"
-                                        color: root.cyan
-                                        font.pixelSize: 31
-                                        anchors.horizontalCenter: parent.horizontalCenter
-                                    }
-                                    Text {
-                                        text: modelData
-                                        color: root.primaryText
-                                        font.pixelSize: 11
-                                        anchors.horizontalCenter: parent.horizontalCenter
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    GridLayout {
-                        visible: root.activeApp === "NeruStore" || root.activeApp === "Steam"
-                        columns: 2
-                        columnSpacing: 12
-                        rowSpacing: 12
-
-                        Repeater {
-                            model: root.activeApp === "Steam"
-                                    ? ["Steam Library", "Proton Compatibility", "Controller Setup", "Game Settings"]
-                                    : ["NeruCode", "NeruGallery", "NeruTerminal", "NeruSpace"]
-                            delegate: Rectangle {
-                                required property string modelData
-                                Layout.preferredWidth: 230
-                                Layout.preferredHeight: 75
-                                radius: 13
-                                color: "#A21A2943"
-                                border.color: "#52617D9B"
-                                Text {
-                                    anchors.centerIn: parent
-                                    text: modelData
-                                    color: root.primaryText
-                                    font.pixelSize: 12
-                                }
-                            }
-                        }
-                    }
-
-                    Item { Layout.fillHeight: true }
-                    Text {
-                        text: "NeruOS Nebula Prototype — UI preview only"
-                        color: "#778AA9"
-                        font.pixelSize: 10
-                    }
-                }
-            }
+    NeruSettings {
+        id: settingsWindow
+        transientParent: root
+        visible: root.activeApp === "NeruSettings"
+        onClosing: root.activeApp = ""
+        onWallpaperRequested: wallpaperDialog.open()
+        onSessionRequested: {
+            root.sessionPanelOpen = true
+            root.activeApp = ""
         }
     }
 
-    Rectangle {
+    NotificationCenter {
+        id: notificationCenter
+        anchors.top: topBar.bottom
+        anchors.right: parent.right
+        anchors.topMargin: 12
+        anchors.rightMargin: 12
+        notificationModel: notificationModel
+        visible: root.notificationCenterOpen
+        z: 75
+        onCloseRequested: root.notificationCenterOpen = false
+        onClearRequested: notificationModel.clear()
+    }
+
+    SessionPanel {
+        id: sessionPanel
+        anchors.top: topBar.bottom
+        anchors.right: parent.right
+        anchors.topMargin: 12
+        anchors.rightMargin: 12
+        userName: sessionManager.userName
+        lockerAvailable: sessionManager.lockerAvailable
+        visible: root.sessionPanelOpen
+        z: 76
+        onCloseRequested: root.sessionPanelOpen = false
+        onActionRequested: function(action) {
+            root.sessionPanelOpen = false
+            if (action === "lock") sessionManager.lockScreen()
+            else if (action === "logout") sessionManager.logOut()
+            else if (action === "suspend") sessionManager.suspend()
+            else if (action === "restart") sessionManager.restart()
+            else if (action === "poweroff") sessionManager.powerOff()
+        }
+    }
+
+        Rectangle {
         id: updatePanel
         width: Math.min(500, root.width - 36)
         height: Math.min(500, root.height - 150)
@@ -1148,8 +1206,8 @@ ApplicationWindow {
             }
             Text {
                 text: root.aboutHeading === "About NeruOS"
-                      ? "NeruOS Nebula — standalone shell prototype. Built with Qt 6 and QML. This is not a bootable OS image."
-                      : "Alt + Space  Open NeruSearch\nEsc  Close overlays\nMove pointer to the left edge  Reveal navigation rail\nHover over NeruDock icons  Magnify"
+                      ? "NeruOS Nebula Edition. Built with Qt 6, C++, QML and labwc."
+                      : "Alt + Space  Open NeruSearch\nAlt + Tab  Switch native windows\nSuper + 1–4  Change workspace\nSuper + Shift + 1–4  Move window to workspace\nSuper + A  Maximize / restore\nSuper + Left / Right  Snap window\nSuper + F  Fullscreen   Super + M  Minimize\nSuper + D  Show desktop   Alt + F4  Close window\nMove pointer to the left edge  Reveal navigation rail"
                 color: root.secondaryText
                 font.pixelSize: 12
                 horizontalAlignment: Text.AlignHCenter
@@ -1181,20 +1239,13 @@ ApplicationWindow {
         }
     }
 
-    Shortcut {
-        sequence: "Ctrl+Alt+1"
-        onActivated: root.activeWorkspace = "General"
-    }
-    Shortcut {
-        sequence: "Ctrl+Alt+2"
-        onActivated: root.activeWorkspace = "Coding"
-    }
-    Shortcut {
-        sequence: "Ctrl+Alt+3"
-        onActivated: root.activeWorkspace = "Gaming"
-    }
-    Shortcut {
-        sequence: "Ctrl+Alt+4"
-        onActivated: root.activeWorkspace = "Study"
-    }
+    // Super+1–4 and Super+Shift+1–4 are handled by labwc.
+    // Ctrl+Alt+1–4 are shell shortcuts that also update the menu-bar label.
+    Shortcut { sequence: "Ctrl+Alt+1"; onActivated: { if (workspaceController.switchTo(1)) root.activeWorkspace = "General" } }
+    Shortcut { sequence: "Ctrl+Alt+2"; onActivated: { if (workspaceController.switchTo(2)) root.activeWorkspace = "Coding" } }
+    Shortcut { sequence: "Ctrl+Alt+3"; onActivated: { if (workspaceController.switchTo(3)) root.activeWorkspace = "Gaming" } }
+    Shortcut { sequence: "Ctrl+Alt+4"; onActivated: { if (workspaceController.switchTo(4)) root.activeWorkspace = "Study" } }
+
+    // Startup animation is a separate lightweight Qt Quick process.
+    // See BootSplash.qml; it launches before the full desktop shell.
 }

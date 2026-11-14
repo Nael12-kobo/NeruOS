@@ -1,0 +1,9 @@
+# NeruOS graphical greeter profile for persistent installations.
+# This template is intentionally not enabled in the live VM Alpha image.
+# Provision a dedicated greeter account before activating greetd.service.
+[terminal]
+vt = 1
+
+[default_session]
+command = "cage -s -- regreet"
+user = "greeter"

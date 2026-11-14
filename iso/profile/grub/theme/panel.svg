@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="740" height="286" viewBox="0 0 740 286">
+  <defs>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1b2948" stop-opacity=".82"/>
+      <stop offset=".56" stop-color="#131e3b" stop-opacity=".72"/>
+      <stop offset="1" stop-color="#24214d" stop-opacity=".76"/>
+    </linearGradient>
+    <linearGradient id="rim" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#7898dc" stop-opacity=".54"/>
+      <stop offset=".55" stop-color="#8d9ad7" stop-opacity=".34"/>
+      <stop offset="1" stop-color="#9a83e3" stop-opacity=".5"/>
+    </linearGradient>
+  </defs>
+  <rect x="2" y="2" width="736" height="282" rx="28" fill="url(#glass)" stroke="url(#rim)" stroke-width="2"/>
+  <path d="M30 3H710" stroke="#d9e5ff" stroke-opacity=".12" stroke-width="1"/>
+</svg>

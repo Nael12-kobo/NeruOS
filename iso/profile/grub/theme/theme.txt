@@ -1,0 +1,79 @@
+# NeruOS Nebula Edition — Minimal Elegant GRUB theme
+title-text: ""
+desktop-image: "background.png"
+desktop-image-scale-method: "stretch"
+desktop-color: "#080D1B"
+
+terminal-font: "NeruOS Regular 14"
+terminal-left: "0"
+terminal-top: "0"
+terminal-width: "100%"
+terminal-height: "100%"
+terminal-border: "0"
+
+# Standalone NeruOS brand mark and restrained wordmark.
++ image {
+    left = 50%-66
+    top = 13%
+    width = 132
+    height = 132
+    file = "logo.png"
+}
+
++ label {
+    left = 0
+    top = 31%
+    width = 100%
+    height = 46
+    text = "NeruOS"
+    font = "NeruOS Bold 32"
+    color = "#F4F6FC"
+    align = "center"
+}
+
++ label {
+    left = 0
+    top = 38%
+    width = 100%
+    height = 28
+    text = "N E B U L A   E D I T I O N"
+    font = "NeruOS Regular 14"
+    color = "#B7C3E0"
+    align = "center"
+}
+
++ boot_menu {
+    left = 50%-322
+    top = 48%+12
+    width = 644
+    height = 262
+    item_font = "NeruOS Regular 20"
+    selected_item_font = "NeruOS Regular 20"
+    item_color = "#AEBBD3"
+    selected_item_color = "#FFFFFF"
+    item_height = 58
+    item_padding = 6
+    item_spacing = 8
+}
+
++ label {
+    left = 0
+    top = 93%
+    width = 100%
+    height = 24
+    text = "↑  ↓   Select       ENTER   Boot       E   Edit       C   Command Line"
+    font = "NeruOS Regular 14"
+    color = "#AFBAD2"
+    align = "center"
+}
+
++ label {
+    left = 84%
+    top = 93%
+    width = 13%
+    height = 24
+    text = "GRUB"
+    font = "NeruOS Regular 14"
+    color = "#8996B3"
+    align = "right"
+}

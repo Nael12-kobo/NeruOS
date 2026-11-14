@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+  <defs>
+    <linearGradient id="base" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#080d1b"/>
+      <stop offset=".55" stop-color="#0b1125"/>
+      <stop offset="1" stop-color="#11102b"/>
+    </linearGradient>
+    <radialGradient id="blueGlow" cx="7%" cy="43%" r="52%">
+      <stop offset="0" stop-color="#173e81" stop-opacity=".42"/>
+      <stop offset="1" stop-color="#0b142d" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="violetGlow" cx="96%" cy="57%" r="49%">
+      <stop offset="0" stop-color="#5931a0" stop-opacity=".44"/>
+      <stop offset="1" stop-color="#170e34" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="waveBlue" x1="0" y1=".25" x2="1" y2=".7">
+      <stop offset="0" stop-color="#102c63" stop-opacity=".9"/>
+      <stop offset=".44" stop-color="#254b9b" stop-opacity=".72"/>
+      <stop offset="1" stop-color="#32216f" stop-opacity=".82"/>
+    </linearGradient>
+    <linearGradient id="wavePurple" x1="0" y1="0" x2="1" y2=".5">
+      <stop offset="0" stop-color="#15316b" stop-opacity=".42"/>
+      <stop offset=".52" stop-color="#29458e" stop-opacity=".62"/>
+      <stop offset="1" stop-color="#6036a6" stop-opacity=".83"/>
+    </linearGradient>
+    <linearGradient id="edge" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#3879d8" stop-opacity=".10"/>
+      <stop offset=".45" stop-color="#5489eb" stop-opacity=".58"/>
+      <stop offset="1" stop-color="#9b6be9" stop-opacity=".55"/>
+    </linearGradient>
+  </defs>
+  <rect width="1280" height="720" fill="url(#base)"/>
+  <rect width="1280" height="720" fill="url(#blueGlow)"/>
+  <rect width="1280" height="720" fill="url(#violetGlow)"/>
+  <path d="M0 530 C175 475 272 488 418 552 C600 632 772 625 934 538 C1075 462 1160 362 1280 332 L1280 720 L0 720Z" fill="#071126" opacity=".93"/>
+  <path d="M0 505 C155 448 271 483 414 538 C590 608 742 616 907 535 C1052 464 1165 367 1280 344 L1280 720 L0 720Z" fill="url(#waveBlue)"/>
+  <path d="M0 574 C176 520 288 531 438 580 C615 638 742 642 913 581 C1061 529 1168 441 1280 423 L1280 720 L0 720Z" fill="url(#wavePurple)" opacity=".87"/>
+  <path d="M0 506 C157 448 273 482 415 538 C590 608 742 616 907 535 C1052 464 1165 367 1280 344" fill="none" stroke="url(#edge)" stroke-width="2.1" opacity=".72"/>
+  <path d="M0 574 C176 520 288 531 438 580 C615 638 742 642 913 581 C1061 529 1168 441 1280 423" fill="none" stroke="#738de7" stroke-opacity=".2" stroke-width="1.2"/>
+  <path d="M0 647 C183 576 300 571 462 624 C638 682 774 694 953 631 C1093 582 1176 516 1280 498" fill="none" stroke="#192a58" stroke-width="50" opacity=".22"/>
+</svg>

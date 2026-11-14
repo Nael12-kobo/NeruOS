@@ -28,6 +28,8 @@ sha256sum -c neruos-vm-alpha-0.4.0-alpha2-x86_64.iso.sha256
 
 This is a VM testing release only. It has no installer and must not be treated as a persistent operating-system image.
 
+The `main` source branch has since gained native foreign-toplevel tracking for the dock. That post-Alpha2 code is not included in this published ISO; a new VM prerelease should follow a dedicated labwc regression pass.
+
 ## Safety model
 
 - The ISO boots from read-only installation media.

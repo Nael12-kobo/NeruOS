@@ -51,6 +51,9 @@ public:
     Q_INVOKABLE bool launch(const QString &appId);
     Q_INVOKABLE bool launchAlias(const QString &alias);
     Q_INVOKABLE bool isRunning(const QString &appId) const;
+    Q_INVOKABLE QStringList windowIdsForAlias(const QString &alias) const;
+    Q_INVOKABLE QStringList aliasesForWindowAppIds(const QStringList &appIds) const;
+    Q_INVOKABLE QString aliasForWindowAppId(const QString &appId) const;
 
 signals:
     void countChanged();

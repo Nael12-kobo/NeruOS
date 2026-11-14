@@ -9,7 +9,7 @@ This is the NeruOS Nebula shell UI prototype built with Qt Quick/QML. It is deve
 Install dependencies:
 
 ~~~bash
-sudo pacman -S --needed base-devel cmake ninja qt6-base qt6-declarative qt6-svg glib2 pacman-contrib
+sudo pacman -S --needed base-devel cmake ninja qt6-base qt6-declarative qt6-svg glib2 wayland pacman-contrib
 ~~~
 
 Configure, compile, and run:
@@ -22,7 +22,7 @@ cmake --build build
 
 Or run ./build.sh from this directory.
 
-## v0.3 interactions
+## Current main-branch interactions
 
 ### NeruSearch and application catalog
 
@@ -39,7 +39,7 @@ Or run ./build.sh from this directory.
 - Nearby icons respond with a smaller scale based on pointer distance.
 - Icons animate smoothly and show a tooltip.
 - Dock aliases attempt to launch common installed file managers, browsers, terminal emulators, code editors, Steam, image viewers, and settings apps.
-- The original demo-app indicator is not yet a native window-task indicator.
+- On compositors with `zwlr_foreign_toplevel_manager_v1`, running indicators come from real toplevel app IDs and the active window is reflected in the dock.
 
 ### NeruBar
 
@@ -70,10 +70,11 @@ Or run ./build.sh from this directory.
 
 ## Diagnostic commands
 
-List visible launchable desktop entries:
+List visible launchable desktop entries and native windows:
 
 ~~~bash
 ./build/neruos-nebula --list-apps
+./build/neruos-nebula --list-windows
 ~~~
 
 Open NeruSearch immediately for UI testing:
@@ -114,17 +115,19 @@ Launch a known desktop entry and run a short process-detection check:
 ./build/neruos-nebula --launch-app org.kde.dolphin.desktop
 ~~~
 
-## Process status limitations
+## Native window tracking and process status
 
-Process status is a best-effort executable-name match from /proc, not native-window tracking. Generic launchers such as Steam, Flatpak, env, and wrapper executables are reported as Unverified. Entries that share an executable are also Unverified to avoid false Running indicators.
+When the active compositor advertises `zwlr_foreign_toplevel_manager_v1`, `ForeignToplevelModel` tracks open native windows, app IDs, titles, active/minimized/maximized/fullscreen state, and close events. It can request activation, minimize, maximize, and close by native window handle. NeruDock uses those app IDs to display running/active dots and activate an existing matching window instead of launching a duplicate.
 
-D-Bus-activated apps, sandbox wrappers, helper processes, and apps that fork may still be missed. The selected compositor/window manager must be integrated before the shell can track real native windows, focus, minimize, and close state.
+The foreign-toplevel protocol is not supported by every Wayland compositor. When it is unavailable, NeruDock falls back to process-name matching and the compositor's window menu. NeruSearch's process-status column always remains a best-effort `/proc` executable-name match. Generic launchers such as Steam, Flatpak, env, and wrapper executables are reported as Unverified; D-Bus activation, sandboxes, helper processes, and forked apps may still be missed.
+
+The public v0.4.0-alpha2 ISO predates this source change. These native dock improvements are on the main branch and require a later VM Alpha prerelease after labwc regression testing.
 
 ## Other limitations
 
 - NeruCenter uses NetworkManager, PipeWire/WirePlumber, and BlueZ when available; brightness and battery depend on exposed hardware and session permissions. Missing services or devices are reported as unavailable.
-- Workspace and basic window actions are sent through wtype and depend on the active compositor's key bindings. The VM Alpha labwc profile provides those bindings, but the shell does not yet consume native window identities or authoritative focus state.
-- Dock running indicators still use best-effort process-name matching, not native-window tracking.
+- Workspace and keyboard-based window actions are sent through wtype and depend on the active compositor's key bindings. The VM Alpha labwc profile provides those bindings.
+- NeruSearch's process-status column remains a best-effort process-name match; NeruDock prefers native toplevel state when the active compositor supports it.
 - This development prototype runs as an ordinary application on the active desktop and does not replace that desktop's session. The separate VM Alpha image launches the shell under labwc and is publicly available for disposable VM-only testing; it does not include a persistent installer or claim physical-hardware support. See [VM Alpha Safety and Testing](../docs/VM-ALPHA.md).
 
 ## Nebula desktop visual shell

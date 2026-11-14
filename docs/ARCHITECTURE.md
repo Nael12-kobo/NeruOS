@@ -52,21 +52,23 @@ The application catalog is implemented in C++ with Qt's QAbstractListModel and G
 - The model exposes display name, desktop ID, description, executable, and process-status information to QML.
 - Search launches a selected entry through GIO.
 - Dock aliases map common NeruOS app names to available Linux applications.
-- The current process indicator compares distinctive executable names with processes visible in /proc.
+- NeruSearch's process-status column compares distinctive executable names with processes visible in /proc. NeruDock separately consumes native toplevel state where supported.
 
-The status model is intentionally conservative:
+NeruSearch still uses a conservative process-status model:
 
 - **Running** means a matching process name was found.
 - **Not detected** means the executable is trackable but no match was found; this does not prove that no related window exists.
 - **Unverified** means a generic launcher or duplicate executable prevents reliable matching.
 
-This is not native-window tracking. D-Bus activation, sandboxing, wrappers, helper processes, and forked applications can make process matching incomplete. labwc manages native windows in VM Alpha, but the shell does not yet consume a native toplevel list or authoritative focused-window identity.
+Process matching can miss D-Bus activation, sandboxing, wrappers, helper processes, and forked applications. This process model is no longer the source of NeruDock's running indicator when native window tracking is available.
 
 ## Window and workspace operations
 
-The VM Alpha profile configures labwc with four virtual desktops and common window actions. NeruOS sends selected workspace and window shortcuts through wtype. The action is therefore dependent on the active compositor's key bindings.
+The VM Alpha profile configures labwc with four virtual desktops and common window actions. NeruOS sends selected workspace and window shortcuts through wtype; those shortcuts depend on the active compositor's key bindings.
 
-The next window-integration stage is to expose native window identity, title, focus, workspace, and state to the shell. Until that exists, dock indicators are process-based and NeruBar application context is not guaranteed to represent the true focused window.
+On compositors that advertise `zwlr_foreign_toplevel_manager_v1`, `ForeignToplevelModel` now receives native toplevel creation, title, app ID, state, focus, and close events. It exposes the open app IDs and active window to QML, and provides focus, minimize, maximize, and close requests by native handle. NeruDock maps app IDs back to GIO desktop entries, displays running/active indicators, and activates a matching existing window rather than launching a duplicate.
+
+The protocol is optional: unsupported compositors retain the previous process-based dock fallback. The current main branch has been built and exercised against a Wayland compositor exposing the protocol; a dedicated VM Alpha / labwc regression pass is still required before a new ISO release. NeruBar's dynamic application-context menus are still not fully driven by native focus state.
 
 ## System services
 

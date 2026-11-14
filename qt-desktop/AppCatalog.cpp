@@ -235,7 +235,7 @@ static QHash<QString, QStringList> appAliasCandidates()
 {
     return {
         {QStringLiteral("nerufiles"), {QStringLiteral("dolphin"), QStringLiteral("thunar"), QStringLiteral("nautilus"), QStringLiteral("nemo"), QStringLiteral("pcmanfm")}},
-        {QStringLiteral("nerubrowser"), {QStringLiteral("firefox"), QStringLiteral("chromium"), QStringLiteral("brave"), QStringLiteral("vivaldi"), QStringLiteral("google-chrome")}},
+        {QStringLiteral("nerubrowser"), {QStringLiteral("firefox"), QStringLiteral("chromium"), QStringLiteral("brave"), QStringLiteral("brave-browser"), QStringLiteral("vivaldi"), QStringLiteral("vivaldi-stable"), QStringLiteral("google-chrome"), QStringLiteral("google-chrome-stable")}},
         {QStringLiteral("neruterminal"), {QStringLiteral("konsole"), QStringLiteral("kitty"), QStringLiteral("alacritty"), QStringLiteral("wezterm"), QStringLiteral("foot"), QStringLiteral("xterm")}},
         {QStringLiteral("nerucode"), {QStringLiteral("code-oss"), QStringLiteral("codium"), QStringLiteral("code"), QStringLiteral("kate"), QStringLiteral("mousepad")}},
         {QStringLiteral("steam"), {QStringLiteral("steam")}},
@@ -274,6 +274,82 @@ bool AppCatalogModel::isRunning(const QString &appId) const
     const int index = indexOfId(appId);
     return index >= 0 && m_applications.at(index).trackingAvailable &&
            !m_applications.at(index).processIds.isEmpty();
+}
+
+static QString normalizedWindowAppId(const QString &value)
+{
+    QString normalized = QFileInfo(value).fileName().trimmed().toCaseFolded();
+    if (normalized.endsWith(QStringLiteral(".desktop")))
+        normalized.chop(8);
+    return normalized;
+}
+
+QStringList AppCatalogModel::windowIdsForAlias(const QString &alias) const
+{
+    const QString key = alias.trimmed().toCaseFolded();
+    if (key.isEmpty())
+        return {};
+
+    const QStringList candidates = appAliasCandidates().value(key);
+    if (candidates.isEmpty())
+        return {};
+
+    QStringList result;
+    for (const QString &candidate : candidates)
+        result.append(normalizedWindowAppId(candidate));
+
+    for (const DesktopApplication &entry : m_applications) {
+        const QString executable = baseExecutable(entry.executable);
+        const QString desktopId = normalizedWindowAppId(entry.id);
+        const QString name = entry.name.trimmed().toCaseFolded();
+        const bool matches = candidates.contains(executable) ||
+                             candidates.contains(desktopId) ||
+                             candidates.contains(name);
+        if (!matches)
+            continue;
+
+        if (!desktopId.isEmpty())
+            result.append(desktopId);
+        if (!executable.isEmpty())
+            result.append(executable);
+    }
+
+    result.removeDuplicates();
+    return result;
+}
+
+QStringList AppCatalogModel::aliasesForWindowAppIds(const QStringList &appIds) const
+{
+    if (appIds.isEmpty())
+        return {};
+
+    QStringList normalizedIds;
+    normalizedIds.reserve(appIds.size());
+    for (const QString &appId : appIds) {
+        const QString normalized = normalizedWindowAppId(appId);
+        if (!normalized.isEmpty() && !normalizedIds.contains(normalized))
+            normalizedIds.append(normalized);
+    }
+
+    QStringList result;
+    const auto aliases = appAliasCandidates();
+    for (auto it = aliases.cbegin(); it != aliases.cend(); ++it) {
+        const QStringList acceptedIds = windowIdsForAlias(it.key());
+        const bool running = std::any_of(
+            normalizedIds.cbegin(), normalizedIds.cend(),
+            [&acceptedIds](const QString &id) { return acceptedIds.contains(id); });
+        if (running)
+            result.append(it.key());
+    }
+
+    result.sort();
+    return result;
+}
+
+QString AppCatalogModel::aliasForWindowAppId(const QString &appId) const
+{
+    const QStringList aliases = aliasesForWindowAppIds({appId});
+    return aliases.isEmpty() ? QString{} : aliases.first();
 }
 
 void AppCatalogModel::scanProcesses()

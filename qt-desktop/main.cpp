@@ -1,6 +1,7 @@
 #include "AppCatalog.h"
 #include "DesktopSettings.h"
 #include "FileSystemModel.h"
+#include "ForeignToplevelModel.h"
 #include "NotificationBridge.h"
 #include "SessionManager.h"
 #include "SystemControls.h"
@@ -22,8 +23,8 @@ int main(int argc, char *argv[])
     QGuiApplication::setApplicationDisplayName(QStringLiteral("NeruOS"));
     QGuiApplication::setOrganizationName(QStringLiteral("NeruOS"));
 
-    // Keep the startup splash lightweight: it opens before AppCatalog/GIO
-    // discovery and the update checker are constructed for the full shell.
+    // Keep the startup splash lightweight: it opens before the catalog,
+    // Wayland window tracker, system controls, and update checker are created.
     if (app.arguments().contains(QStringLiteral("--boot-splash"))) {
         QQmlApplicationEngine splashEngine;
         const QUrl splashUrl(QStringLiteral("qrc:/qt/qml/NeruOS/BootSplash.qml"));
@@ -46,16 +47,11 @@ int main(int argc, char *argv[])
         return app.exec();
     }
 
-    AppCatalogModel appCatalog;
-    DesktopSettings desktopSettings;
-    FileSystemModel fileSystemModel;
-    SessionManager sessionManager;
-    NotificationBridge notificationBridge;
-    SystemControls systemControls;
-    WorkspaceController workspaceController;
-    UpdateChecker updateChecker;
-
+    // Keep command-line diagnostics isolated from unrelated services. In
+    // particular, do not start NetworkManager / wpctl / bluetoothctl polling
+    // when a diagnostic is going to exit immediately.
     if (app.arguments().contains(QStringLiteral("--test-notifications"))) {
+        NotificationBridge notificationBridge;
         qInfo().noquote() << QStringLiteral("NeruOS notification D-Bus service: %1")
                                  .arg(notificationBridge.busAvailable()
                                           ? QStringLiteral("available")
@@ -64,7 +60,36 @@ int main(int argc, char *argv[])
         return app.exec();
     }
 
+    if (app.arguments().contains(QStringLiteral("--list-windows"))) {
+        ForeignToplevelModel windowManager;
+        if (!windowManager.available()) {
+            qWarning().noquote() << QStringLiteral("Native window tracking unavailable: %1")
+                                        .arg(windowManager.error());
+            return 3;
+        }
+
+        AppCatalogModel appCatalog;
+        qInfo().noquote() << QStringLiteral("NeruOS native window list: %1 windows")
+                                 .arg(windowManager.count());
+        for (int row = 0; row < windowManager.rowCount(); ++row) {
+            const QModelIndex item = windowManager.index(row, 0);
+            const QString title = windowManager.data(item, ForeignToplevelModel::TitleRole).toString();
+            const QString appId = windowManager.data(item, ForeignToplevelModel::AppIdRole).toString();
+            const bool active = windowManager.data(item, ForeignToplevelModel::ActivatedRole).toBool();
+            const bool minimized = windowManager.data(item, ForeignToplevelModel::MinimizedRole).toBool();
+            const bool maximized = windowManager.data(item, ForeignToplevelModel::MaximizedRole).toBool();
+            const QString dockAlias = appCatalog.aliasForWindowAppId(appId);
+            qInfo().noquote() << QStringLiteral("%1 | %2 | dock=%3 | active=%4 | minimized=%5 | maximized=%6")
+                                     .arg(title, appId, dockAlias.isEmpty() ? QStringLiteral("-") : dockAlias,
+                                          active ? QStringLiteral("yes") : QStringLiteral("no"),
+                                          minimized ? QStringLiteral("yes") : QStringLiteral("no"),
+                                          maximized ? QStringLiteral("yes") : QStringLiteral("no"));
+        }
+        return 0;
+    }
+
     if (app.arguments().contains(QStringLiteral("--list-apps"))) {
+        AppCatalogModel appCatalog;
         qInfo().noquote() << QStringLiteral("NeruOS application catalog: %1 launchable desktop entries")
                                  .arg(appCatalog.count());
         for (int row = 0; row < appCatalog.rowCount(); ++row) {
@@ -90,6 +115,7 @@ int main(int argc, char *argv[])
             return 2;
         }
 
+        AppCatalogModel appCatalog;
         const QString appId = app.arguments().at(launchArgument + 1);
         QObject::connect(&appCatalog, &AppCatalogModel::launchError,
                          &app, [&app](const QString &name, const QString &message) {
@@ -110,18 +136,10 @@ int main(int argc, char *argv[])
         return app.exec();
     }
 
-    const bool showSearch = app.arguments().contains(QStringLiteral("--show-search"));
-    const bool showCenter = app.arguments().contains(QStringLiteral("--show-center"));
-    const bool showFiles = app.arguments().contains(QStringLiteral("--show-files"));
-    const bool showSettings = app.arguments().contains(QStringLiteral("--show-settings"));
-    const bool showNotifications = app.arguments().contains(QStringLiteral("--show-notifications"));
-    const bool showSession = app.arguments().contains(QStringLiteral("--show-session"));
-    const bool showUpdates = app.arguments().contains(QStringLiteral("--show-updates"));
-    const bool checkUpdates = app.arguments().contains(QStringLiteral("--check-updates"));
-
-    if (checkUpdates) {
+    if (app.arguments().contains(QStringLiteral("--check-updates"))) {
+        UpdateChecker updateChecker;
         QObject::connect(&updateChecker, &UpdateChecker::checkFinished,
-                         &app, [&app, &updateChecker](bool updatesAvailable, int count) {
+                         &app, [&app, &updateChecker](bool updatesAvailable, int) {
             qInfo().noquote() << updateChecker.message();
             for (const QString &item : updateChecker.updates())
                 qInfo().noquote() << item;
@@ -130,6 +148,24 @@ int main(int argc, char *argv[])
         updateChecker.checkNow();
         return app.exec();
     }
+
+    const bool showSearch = app.arguments().contains(QStringLiteral("--show-search"));
+    const bool showCenter = app.arguments().contains(QStringLiteral("--show-center"));
+    const bool showFiles = app.arguments().contains(QStringLiteral("--show-files"));
+    const bool showSettings = app.arguments().contains(QStringLiteral("--show-settings"));
+    const bool showNotifications = app.arguments().contains(QStringLiteral("--show-notifications"));
+    const bool showSession = app.arguments().contains(QStringLiteral("--show-session"));
+    const bool showUpdates = app.arguments().contains(QStringLiteral("--show-updates"));
+
+    AppCatalogModel appCatalog;
+    DesktopSettings desktopSettings;
+    FileSystemModel fileSystemModel;
+    SessionManager sessionManager;
+    NotificationBridge notificationBridge;
+    SystemControls systemControls;
+    WorkspaceController workspaceController;
+    ForeignToplevelModel windowManager;
+    UpdateChecker updateChecker;
 
     QSortFilterProxyModel appFilter;
     appFilter.setSourceModel(&appCatalog);
@@ -147,6 +183,7 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty(QStringLiteral("notificationBridge"), &notificationBridge);
     engine.rootContext()->setContextProperty(QStringLiteral("systemControls"), &systemControls);
     engine.rootContext()->setContextProperty(QStringLiteral("workspaceController"), &workspaceController);
+    engine.rootContext()->setContextProperty(QStringLiteral("windowManager"), &windowManager);
     engine.rootContext()->setContextProperty(QStringLiteral("updateChecker"), &updateChecker);
 
     const QUrl mainUrl(QStringLiteral("qrc:/qt/qml/NeruOS/Main.qml"));

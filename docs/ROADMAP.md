@@ -1,6 +1,6 @@
 # NeruOS Roadmap
 
-The roadmap is directional. Items are not promises of a date, and a milestone is complete only when its acceptance criteria are met. Status reflects the repository and VM Alpha state as of 14 November 2026.
+The roadmap is directional. Items are not promises of a date, and a milestone is complete only when its acceptance criteria are met. Status reflects the main source branch as of 14 November 2026. The public v0.4.0-alpha2 ISO is an earlier snapshot and does not include post-release source changes.
 
 ## Milestone 0 — Public project foundation
 
@@ -22,7 +22,7 @@ The roadmap is directional. Items are not promises of a date, and a milestone is
 - [x] Add NeruSearch with GIO desktop-entry discovery and application launch.
 - [x] Add NeruFiles, NeruSettings, NeruCenter, Notification Center, and Session Panel.
 - [x] Add boot animation and saved appearance / dock preferences.
-- [ ] Replace process-name indicators with compositor-backed native window state.
+- [x] Use compositor-backed native window state for dock indicators and app activation when the WLR protocol is available; retain process fallback elsewhere.
 - [ ] Complete keyboard navigation and reduced-motion behavior across shell components.
 - [ ] Verify layouts on multiple resolutions, fractional scaling, and multi-monitor setups.
 
@@ -33,10 +33,12 @@ The roadmap is directional. Items are not promises of a date, and a milestone is
 - [x] Select labwc as the Wayland compositor / window manager for the VM Alpha session.
 - [x] Delegate native window management and virtual desktops to labwc.
 - [x] Connect core workspace and window actions through compositor keyboard shortcuts.
-- [ ] Consume a real native toplevel list and active-window state.
-- [ ] Make dock running indicators and window switching represent actual windows, not /proc process-name guesses.
+- [x] Consume native toplevel title, app ID, state, and active-window updates through the WLR foreign-toplevel protocol.
+- [x] Map native app IDs to dock aliases, show running/active indicators, and activate an existing matching window on click.
 - [ ] Drive NeruBar application context from the focused native window.
-- [ ] Define reliable focus, minimize, maximize, close, and workspace behavior using native window identifiers.
+- [x] Add native-handle activation, minimize, maximize, and close operations to the window model.
+- [ ] Wire minimize/maximize/close into dedicated NeruOS UI controls and test them in the labwc VM.
+- [ ] Run a dedicated native-window regression pass in the VM Alpha labwc session; current host Wayland smoke test does not replace this.
 - [ ] Define multi-monitor and fractional-scaling behavior.
 
 ## Milestone 3 — Session and system services

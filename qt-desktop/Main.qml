@@ -47,6 +47,30 @@ ApplicationWindow {
 
     property var dockApps: []
 
+    function dockDisplayName(aliasKey) {
+        const names = {
+            "nerufiles": "NeruFiles",
+            "nerubrowser": "NeruBrowser",
+            "neruterminal": "NeruTerminal",
+            "nerucode": "NeruCode",
+            "steam": "Steam",
+            "nerugallery": "NeruGallery"
+        }
+        return names[aliasKey] || ""
+    }
+
+    readonly property var dockRunningApplications: {
+        const aliases = windowManager.available
+                     ? appCatalog.aliasesForWindowAppIds(windowManager.runningAppIds)
+                     : appCatalog.runningAliases
+        return aliases.map(function(aliasKey) { return root.dockDisplayName(aliasKey) })
+                      .filter(function(name) { return name.length > 0 })
+    }
+
+    readonly property string dockActiveApplication: root.activeApp.length > 0
+        ? root.activeApp
+        : root.dockDisplayName(appCatalog.aliasForWindowAppId(windowManager.activeAppId))
+
     ListModel {
         id: notificationModel
     }
@@ -114,10 +138,13 @@ ApplicationWindow {
 
         activeApp = ""
 
-        // Do not spawn duplicate copies when the app is already running.
-        // Open labwc's native client list so the user can focus its existing
-        // window, including windows on another virtual desktop.
-        if (appCatalog.runningAliases.indexOf(name.toLowerCase()) >= 0) {
+        // Prefer the compositor's real toplevel list. This activates the
+        // existing app window directly instead of opening another copy.
+        if (windowManager.available) {
+            if (windowManager.activateFirstMatchingAppId(appCatalog.windowIdsForAlias(name)))
+                return
+        } else if (appCatalog.runningAliases.indexOf(name.toLowerCase()) >= 0) {
+            // Older / unsupported sessions retain the process-based fallback.
             workspaceController.showWindowMenu()
             return
         }
@@ -531,8 +558,8 @@ ApplicationWindow {
         z: 50
         blurSource: desktopBackground
         applications: root.dockApps
-        runningApplications: appCatalog.runningAliases
-        activeApplication: root.activeApp
+        runningApplications: root.dockRunningApplications
+        activeApplication: root.dockActiveApplication
         onApplicationRequested: function(appName) {
             root.launchDockApp(appName)
         }

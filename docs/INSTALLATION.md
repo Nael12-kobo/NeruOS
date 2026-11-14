@@ -11,10 +11,10 @@ Do not run prototype code with sudo.
 ## Dependencies
 
 ~~~bash
-sudo pacman -S --needed base-devel cmake ninja qt6-base qt6-declarative qt6-svg glib2 pacman-contrib
+sudo pacman -S --needed base-devel cmake ninja qt6-base qt6-declarative qt6-svg glib2 wayland pacman-contrib
 ~~~
 
-Qt 6.5 or newer and GLib/GIO 2.0 development files are required.
+Qt 6.5 or newer, GLib/GIO 2.0 development files, the Wayland client library, and `wayland-scanner` are required. The WLR foreign-toplevel protocol XML is vendored under `qt-desktop/protocols/` and generated during the CMake build.
 
 ## Get the source
 
@@ -40,6 +40,7 @@ cmake --build build
 
 ~~~bash
 ./build/neruos-nebula --list-apps
+./build/neruos-nebula --list-windows
 ~~~
 
 Open NeruSearch immediately for a quick UI check:
@@ -68,7 +69,9 @@ To launch a known desktop entry and run a short process-detection diagnostic:
 - Open NeruSettings and choose a wallpaper.
 - Press Escape to close transient UI.
 
-The dock's running indicators are still based on best-effort process-name matching, not native window identity. Workspace and basic window actions are sent through wtype and require matching compositor key bindings; the VM Alpha labwc profile supplies those bindings. They are not a replacement for a native toplevel-management API.
+When the compositor advertises `zwlr_foreign_toplevel_manager_v1`, NeruDock reads native app IDs and focus state, shows real running/active indicators, and activates an existing matching window on click. The shell exposes native minimize/maximize/close requests through the same model. On unsupported compositors it retains the process-name fallback. NeruSearch's process-status column remains best-effort.
+
+Workspace and keyboard-based window actions are sent through wtype and require matching compositor key bindings; the VM Alpha labwc profile supplies those bindings.
 
 NeruCenter reads and controls real session services when available: NetworkManager for Wi-Fi, PipeWire/WirePlumber for audio, and BlueZ for Bluetooth. Brightness and battery depend on hardware interfaces and user permissions. Controls report unavailable when a service, device, or authorization is missing; the shell does not run as root to force access.
 
@@ -82,7 +85,7 @@ The application runs above the current desktop session and still uses its window
 
 ### CMake cannot find Qt 6 or GIO
 
-Confirm the packages are installed. On Arch Linux, install qt6-base, qt6-declarative, qt6-svg, and glib2, then rerun configuration from a clean build directory.
+Confirm the packages are installed. On Arch Linux, install qt6-base, qt6-declarative, qt6-svg, glib2, and wayland (for wayland-client and wayland-scanner), then rerun configuration from a clean build directory.
 
 ### An application does not appear
 

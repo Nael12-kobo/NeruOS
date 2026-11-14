@@ -2,6 +2,16 @@
 
 All notable project changes will be recorded here.
 
+## Unreleased — Native window tracking for NeruDock
+
+- Added a Wayland client for the WLR foreign-toplevel protocol, with native window titles, app IDs, focus/state updates, and activation/minimize/maximize/close requests.
+- Replaced NeruDock's process-only running indicators with native app-window state when supported by the compositor; retained the process-based fallback for unsupported sessions.
+- Mapped native app IDs back to GIO desktop-entry aliases so clicking an open dock app activates its existing window rather than launching a duplicate.
+- Added `--list-windows` for inspecting native window IDs, titles, focus state, and dock alias mapping.
+- Kept the command-line diagnostics isolated from hardware service polling.
+- These are source-branch changes only; the public v0.4.0-alpha2 ISO is unchanged pending a labwc VM regression pass.
+
+
 ## v0.4.0-alpha2 — Bluetooth process stability and BIOS smoke test
 
 - Bounded `bluetoothctl` query and power commands with BlueZ non-interactive timeouts so the quick settings panel does not stay stuck in Updating.

@@ -16,13 +16,17 @@ The shell does not replace the compositor. It is the desktop shell running insid
 
 Native application windows are managed by labwc. The profile configures four named desktops, a window switcher, maximize/restore, minimize, close, snapping, and show-desktop shortcuts.
 
-NeruOS exposes these operations from its Window menu through `WorkspaceController` and `wtype`. The shell window is configured to remain present across the virtual desktops. App-specific process matching is best-effort and is not identical to focused-window tracking.
+NeruOS exposes workspace and keyboard-based window operations from its Window menu through `WorkspaceController` and `wtype`. The shell window is configured to remain present across the virtual desktops.
+
+`ForeignToplevelModel` connects to `zwlr_foreign_toplevel_manager_v1` when the compositor advertises it. The model receives native window handles, title, app ID, active/minimized/maximized/fullscreen state, and close events. It provides native activation, minimize, maximize, and close requests. This protocol is optional and is not advertised by every Wayland compositor.
 
 ## Priority 2 — NeruDock integration
 
 The dock reads individually replaceable PNG icons from `assets/icons/`. Each dock item keeps its image aspect ratio, magnifies on hover, shows an active/running indicator, and dispatches application requests.
 
-The app catalog scans visible Linux desktop entries through GIO and checks matching process names under `/proc`. When an alias is already running, the dock opens labwc's native client list rather than spawning another copy. Generic launchers, sandbox wrappers, D-Bus-activated applications, and helper processes can make process matching incomplete.
+The app catalog scans visible Linux desktop entries through GIO. On compositors that provide the foreign-toplevel protocol, NeruDock uses native app IDs and active-window state for running indicators and maps aliases to existing windows. Clicking an already-open app activates a matching window directly. On unsupported compositors it falls back to the older `/proc` executable matching and compositor window menu.
+
+NeruSearch's separate process-status column still uses `/proc`; generic launchers, sandbox wrappers, D-Bus-activated applications, and helper processes can make that diagnostic incomplete.
 
 Pinned applications are stored in `DesktopSettings` and rebuilt into the dock when preferences change.
 
@@ -81,6 +85,12 @@ qmllint Main.qml NeruBar.qml NeruDock.qml NeruFiles.qml NeruSettings.qml Notific
 ```
 
 Useful smoke-test options:
+
+```bash
+./build/neruos-nebula --list-windows
+```
+
+This prints native window titles, app IDs, dock alias mapping, and compositor state when the active Wayland compositor supports the foreign-toplevel protocol.
 
 ```bash
 ./build/neruos-nebula --show-center

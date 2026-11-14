@@ -16,7 +16,7 @@
 
 The long-term direction is a **standalone NeruOS desktop shell**, not a KDE Plasma theme. The VM Alpha image now starts its own Wayland session with labwc and launches the native Qt 6 / C++ / QML Nebula shell. labwc manages native windows and virtual desktops; NeruOS provides the desktop UI, dock, quick settings, notifications, app search, file manager, settings, and session panel.
 
-> **Current status:** v0.4.0-alpha2 is a diskless x86_64 live ISO with themed UEFI GRUB and Legacy BIOS Syslinux boot paths. UEFI previously reached the full Nebula desktop in QEMU; the alpha2 build has now also booted to the full desktop in GNOME Boxes using its BIOS virtual machine. No installer is included, and VM helpers do not attach host disks. NeruOS remains an early VM-only prototype and is not ready for installation on physical hardware.
+> **Published image:** v0.4.0-alpha2 is a diskless x86_64 live ISO with themed UEFI GRUB and Legacy BIOS Syslinux boot paths. UEFI previously reached the full Nebula desktop in QEMU; alpha2 also booted to the full desktop in GNOME Boxes using its BIOS virtual machine. No installer is included, and VM helpers do not attach host disks. NeruOS remains an early VM-only prototype and is not ready for installation on physical hardware. The `main` branch contains newer, unreleased source changes; those are not included in the already-published Alpha2 ISO.
 
 ## Download VM Alpha
 
@@ -44,9 +44,9 @@ sha256sum -c neruos-vm-alpha-0.4.0-alpha2-x86_64.iso.sha256
 
 See the [Nebula Design System](docs/DESIGN-SYSTEM.md) and [Branding Guide](docs/BRANDING.md).
 
-## Current v0.4.0-alpha2 development
+## Current main-branch development
 
-| Component | v0.4.0-alpha2 status |
+| Component | Current main branch (post-Alpha2 source) |
 |---|---|
 | **NeruBar** | Native menu bar, workspace label, clock, system status, and actions |
 | **Window management** | labwc manages native windows, focus, minimize/maximize, snap, close, and window switching |
@@ -60,7 +60,7 @@ See the [Nebula Design System](docs/DESIGN-SYSTEM.md) and [Branding Guide](docs/
 | **Session Panel** | systemd-logind power/session actions and PAM-backed swaylock; Regreet is packaged for a future persistent install |
 | **VM Alpha** | x86_64 live ISO with themed UEFI GRUB, Legacy BIOS Syslinux, and diskless QEMU test paths |
 
-**Process status is a best-effort indicator, not a window manager's active-window state.** Apps that launch through helper processes, D-Bus activation, sandboxes, or wrappers may not match the desktop entry executable. Multiple entries using the same executable may share a process status.
+**NeruDock uses native window state when the compositor exposes `wlr-foreign-toplevel-management`.** It reads open-window app IDs and active state, marks matching dock items as running, and activates an existing matching window on click. Unsupported compositors fall back to process-name detection. NeruSearch's separate process-status column remains best-effort: helper processes, D-Bus activation, sandboxes, wrappers, and shared executables can still make it incomplete.
 
 ## Standalone shell strategy
 
@@ -108,11 +108,12 @@ The **qt-desktop/** directory contains a standalone Qt Quick/QML shell prototype
 - CMake, Ninja, and a C++17 compiler
 - Qt 6.5 or newer: Qt Quick, Qt Quick Controls 2, and Qt SVG
 - GLib / GIO 2.0 development files
+- Wayland client library and `wayland-scanner` (native toplevel protocol generation)
 
 Install packages:
 
 ~~~bash
-sudo pacman -S --needed base-devel cmake ninja qt6-base qt6-declarative qt6-svg glib2
+sudo pacman -S --needed base-devel cmake ninja qt6-base qt6-declarative qt6-svg glib2 wayland
 ~~~
 
 Build and run:
@@ -129,6 +130,7 @@ List discovered applications from the terminal:
 
 ~~~bash
 ./build/neruos-nebula --list-apps
+./build/neruos-nebula --list-windows
 ~~~
 
 To launch a known desktop entry and run a short process-detection check:
@@ -150,7 +152,8 @@ NeruOS/
 ├── iso/profile/            # UEFI GRUB + Legacy BIOS Syslinux live ISO profile
 ├── scripts/                # Rootless ISO build and diskless VM launch helpers
 ├── qt-desktop/
-│   ├── AppCatalog.h/.cpp   # GIO app discovery, launch, process status
+│   ├── AppCatalog.h/.cpp   # GIO app discovery, launch, alias mapping
+│   ├── ForeignToplevelModel.h/.cpp # Wayland native windows and dock activation
 │   ├── Main.qml            # Shell composition
 │   ├── NeruBar.qml         # Dynamic menu and status bar
 │   └── NeruDock.qml        # Floating magnifying dock
@@ -164,15 +167,7 @@ NeruOS/
 
 ## Roadmap
 
-1. **Shell prototype** — standalone QML components, dynamic NeruBar, magnifying NeruDock, and keyboard interaction.
-2. **Application discovery and launch** — read desktop entries, launch through GIO, and show best-effort process status.
-3. **Native window integration** — reliable application/window state, focus, minimize, and close via a chosen session architecture.
-4. **System services** — real NeruCenter controls, notifications, and session integration.
-5. **Desktop session engineering** — compositor/window-manager strategy, login session, crash recovery, and multi-monitor behavior.
-6. **First-party utilities** — NeruSettings, NeruFiles, and NeruStore.
-7. **VM Alpha ISO** — build a live image with themed UEFI GRUB and Legacy BIOS Syslinux, no installer, and no writable host-disk access; validate both paths in QEMU / VirtualBox.
-8. **Persistent system engineering** — installer, signed NeruOS package repository, project release feed, upgrade, rollback, and recovery.
-9. **Hardware Alpha** — only after VM installation, update, and recovery paths are tested.
+The detailed milestone status and acceptance criteria are maintained in [docs/ROADMAP.md](docs/ROADMAP.md). The current main branch has begun native toplevel tracking for the dock; UI wiring for minimize/maximize/close, compositor-specific regression testing, persistent installation, signed updates, rollback, and hardware validation remain future work.
 
 Read the [full roadmap](docs/ROADMAP.md). Planned features are not released features.
 
